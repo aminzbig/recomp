@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Recomp — Cut Block</title>
+<style>
+  html,body{margin:0;padding:0;background:#000;}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  input[type=number]{-moz-appearance:textfield;}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// Storage shim: use Claude's window.storage if present, else localStorage
+if (!window.storage) {
+  window.storage = {
+    async get(key){ const v = localStorage.getItem("recomp:"+key); if(v===null) throw new Error("not found"); return { key, value: v }; },
+    async set(key, value){ localStorage.setItem("recomp:"+key, value); return { key, value }; },
+    async delete(key){ localStorage.removeItem("recomp:"+key); return { key, deleted:true }; },
+    async list(prefix){ const keys=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith("recomp:"+(prefix||""))) keys.push(k.slice(7)); } return { keys }; },
+  };
+}
+</script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+// ============================ DATA ============================
+const PROGRAM = {
+  push: {
+    name: "Push", sub: "Upper chest + shoulders", accent: "#FF453A",
+    core: "Core TABATA 8×30/15 — Hollow → Hollow rock → Arch hollow → Side hollow",
+    cardio: "30–35 min Zone 2 (incline walk/bike) — daily on the cut",
+    exercises: [
+      { id: "p_inc_bb", name: "Incline Barbell Bench", scheme: "4×6-8", main: true, t:"press" },
+      { id: "p_db_press", name: "Seated DB Shoulder Press", scheme: "4×8-10", t:"ohp" },
+      { id: "p_inc_db", name: "Incline DB Press 30°", scheme: "3×10-12", t:"press" },
+      { id: "p_cable_lat", name: "Cable Lateral Raise", scheme: "4×12-15", t:"lateral" },
+      { id: "p_dips", name: "Dips / Decline Push-up", scheme: "3×max", t:"dip" },
+      { id: "p_tri", name: "OH Cable Triceps Ext", scheme: "3×12", t:"pushdown" },
+      { id: "p_cablecrunch", name: "Cable Crunch (loaded)", scheme: "4×15", t:"kneelcrunch" },
+      { id: "p_hlr", name: "Hanging Leg Raise", scheme: "3×12", t:"hang" },
+    ],
+  },
+  pull: {
+    name: "Pull", sub: "Back + biceps + abs", accent: "#0A84FF",
+    core: "Core TABATA 8×30/15 — Hi plank → Shoulder tap → Reverse → Spider",
+    cardio: "30–35 min Zone 2 (incline walk/bike) — daily on the cut",
+    exercises: [
+      { id: "pl_pullup", name: "Weighted/Assisted Pull-up", scheme: "4×6-8", main: true, t:"pullup" },
+      { id: "pl_latpull", name: "Lat Pulldown (wide)", scheme: "4×10-12", t:"pulldown" },
+      { id: "pl_csrow", name: "Chest-supported DB Row", scheme: "4×10", t:"row" },
+      { id: "pl_cablerow", name: "Cable Row (close)", scheme: "3×12", t:"row" },
+      { id: "pl_facepull", name: "Face Pull", scheme: "4×15-20", t:"facepull" },
+      { id: "pl_ezcurl", name: "EZ-bar Curl", scheme: "3×8-10", t:"curl" },
+      { id: "pl_hammer", name: "DB Hammer Curl", scheme: "3×12", t:"curl" },
+      { id: "pl_declinesit", name: "Weighted Decline Sit-up", scheme: "4×12", t:"situp" },
+      { id: "pl_twist", name: "Russian Twist (plate)", scheme: "3×20", t:"twist" },
+    ],
+  },
+  legs: {
+    name: "Legs", sub: "Squat focus", accent: "#30D158",
+    core: "Core TABATA 8×40/20 — Beast hold → Crab hold → Beast walk → Crab walk",
+    cardio: "30 min Zone 2 or 20 min walk",
+    exercises: [
+      { id: "lg_squat", name: "Back Squat", scheme: "5×5", main: true, t:"squat" },
+      { id: "lg_rdl", name: "Romanian Deadlift", scheme: "4×8", t:"hinge" },
+      { id: "lg_legpress", name: "Leg Press", scheme: "3×12", t:"legpress" },
+      { id: "lg_lunge", name: "Walking Lunge (DB)", scheme: "3×12/leg", t:"lunge" },
+      { id: "lg_curl", name: "Leg Curl", scheme: "3×12", t:"legcurl" },
+      { id: "lg_calf", name: "Standing Calf Raise", scheme: "4×15", t:"calf" },
+      { id: "lg_ktc", name: "Hanging Knee-to-Chest", scheme: "3×15", t:"hang" },
+      { id: "lg_back", name: "Back Extension", scheme: "3×15", t:"backext" },
+    ],
+  },
+  delts: {
+    name: "Delts+Chest", sub: "The lines day", accent: "#FF9F0A",
+    core: "Core TABATA 8×30/15 — Elbow plank → Side L → Side R → Reverse",
+    cardio: "30–35 min Zone 2 (incline walk/bike) — daily on the cut",
+    exercises: [
+      { id: "d_ohp", name: "Standing Overhead Press", scheme: "4×6-8", main: true, t:"ohp" },
+      { id: "d_lat", name: "DB Lateral Raise (3 angles)", scheme: "4×12-15", t:"lateral" },
+      { id: "d_inc", name: "Incline Cable/Machine Press", scheme: "4×10", t:"press" },
+      { id: "d_rear", name: "Rear Delt Fly", scheme: "4×15", t:"facepull" },
+      { id: "d_front", name: "DB Front Raise", scheme: "3×12", t:"frontraise" },
+      { id: "d_shrug", name: "DB/BB Shrug", scheme: "3×15", t:"shrug" },
+      { id: "d_latburn", name: "Cable Lat Raise burnout", scheme: "2×max", t:"lateral" },
+      { id: "d_crunch", name: "Cable Crunch", scheme: "3×20", t:"kneelcrunch" },
+      { id: "d_flutter", name: "Flutter Kicks", scheme: "3×40", t:"situp" },
+    ],
+  },
+  cond: {
+    name: "Conditioning", sub: "CrossFit / full body", accent: "#BF5AF2",
+    core: "Core TABATA 8×40/20 — Walking plank → Mtn climber → Hi plank → Hip thrust",
+    cardio: "Built into WOD",
+    wods: [
+      "W1 · EMOM 18: Wall ball 14 / KB swing 16 / Burpees 8",
+      "W2 · E3MOM 15: DB thrusters 12 / Pull-ups 8 / Air bike 10cal",
+      "W3 · 21-15-9 for time: DB G2OH / Burpee over DB / Air squat",
+      "W4 · AMRAP 20: 15cal bike / 10 wall ball / 12 step-up-over / 10 HR push-up",
+    ],
+    exercises: [
+      { id: "c_core", name: "Core TABATA 8×40/20", scheme: "circuit", t:"plank" },
+      { id: "c_wod", name: "WOD (week's metcon)", scheme: "for time/AMRAP", t:"burpee" },
+      { id: "c_dragon", name: "Dragon Flag / Hollow Rock", scheme: "3×max", t:"dragonflag" },
+    ],
+  },
+};
+const DAY_ORDER = ["push", "pull", "legs", "delts", "cond"];
+
+// 4-week block. Each week: progression focus + the Mon–Sun session map.
+// session keys map to PROGRAM; "off" = rest, "pump" = optional weak-point day.
+const BLOCK_START = "2026-07-11"; // Day 1 = Sat Jul 11 - CUT block starts today
+const WEEKDAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const MONTH = [
+  { wk:1, focus:"Cut starts — hold strength", detail:"Deficit begins (1,900–2,100 kcal). Weights same as before — do NOT drop loads. Log everything.",
+    wod:"WOD 1 — EMOM 18: wall ball/KB swing/burpee · WOD 2 — AMRAP 15: 10cal bike / 8 DB snatch / 10 sit-up",
+    days:["push","pull","legs","delts","cond","cond2","off"] },
+  { wk:2, focus:"Hold or add reps", detail:"Fight for every rep at the same weight. Holding strength in a deficit = keeping muscle.",
+    wod:"WOD 1 — E3MOM 15: thrusters/pull-up/bike · WOD 2 — 5 RFT: 200m row / 12 KB swing / 10 HR push-up",
+    days:["push","pull","legs","delts","cond","cond2","off"] },
+  { wk:3, focus:"Push where you can", detail:"If a lift feels strong, nudge it up. If flat: check sleep + carbs around training, not the plan.",
+    wod:"WOD 1 — 21-15-9: G2OH/burpee/squat · WOD 2 — EMOM 16: ski erg / sit-ups / step-over / plank",
+    days:["push","pull","legs","delts","cond","cond2","off"] },
+  { wk:4, focus:"Assess + diet break decision", detail:"Weigh in, photos, waist. Down ~2–2.5kg? Continue. Stalled or wrecked? 3–4 days at maintenance, then resume.",
+    wod:"WOD 1 — AMRAP 20: bike/wall ball/step-over/push-up · WOD 2 — 30min Zone2 + core circuit",
+    days:["push","pull","legs","delts","cond","cond2","off"] },
+];
+const SESSION_META = {
+  push:{ label:"Push", accent:"#FF453A" },
+  pull:{ label:"Pull", accent:"#0A84FF" },
+  legs:{ label:"Legs", accent:"#30D158" },
+  delts:{ label:"Delts+Chest", accent:"#FF9F0A" },
+  cond:{ label:"Conditioning", accent:"#BF5AF2" },
+  pump:{ label:"Optional pump", accent:"#5E5CE6" },
+  cond2:{ label:"Metcon + Core (short)", accent:"#BF5AF2" },
+  off:{ label:"Rest", accent:"#48484A" },
+};
+
+
+// Pelvic-floor / sexual-function work — daily, done anywhere, doesn't eat gym time
+const PELVIC = {
+  intro: "Trains the muscles behind erection firmness, control and stamina. Discreet — do it anywhere, ~5 min/day. Consistency beats intensity.",
+  find: "Find the muscle: the one you'd use to stop urine mid-flow or lift the testicles. Don't clench glutes or hold your breath.",
+  drills: [
+    ["Slow holds", "Squeeze, hold 5s, fully relax 5s. ×10", "Builds endurance"],
+    ["Quick flicks", "Fast squeeze + release, 1s each. ×15", "Builds control / reaction"],
+    ["Long hold", "One max hold as long as you can, once. ", "Builds strength"],
+    ["Reverse (relax)", "Consciously fully let go 10s. ×5", "Relaxation = control, avoids over-tightness"],
+  ],
+  note: "1 round morning + 1 evening. The full relax half matters as much as the squeeze — don't skip it. Results in 4–6 weeks.",
+};
+
+
+const DIET = {
+  targets: [
+    ["Calories", "1,900–2,100 kcal", "cut deficit — at 83kg"],
+    ["Protein", "175–185 g", "higher on a cut — locked"],
+    ["Fat", "50–60 g", "cut comes from here"],
+    ["Carbs", "150–180 g", "around AM training — keeps you strong"],
+  ],
+  meals: [
+    { name:"Pre-workout", time:"30s · grab", protein:"", icon:"banana",
+      items:[["banana",1,"banana"],["rice cakes",2,"or 2 rice cakes"]],
+      text:"Coffee + 1 banana (or 2 rice cakes). Keep this — training fasted on a cut costs muscle." },
+    { name:"Breakfast (post)", time:"4 min", protein:"≈58g P", icon:"eggs",
+      items:[["eggs",3,"whole eggs"],["whites",1,"150g egg whites"],["oats",1,"70g oats + milk"],["whey",1,"1 scoop whey"]],
+      text:"CUT version: 3 whole eggs (was 4) + more whites. Oats trimmed slightly. Protein stays high." },
+    { name:"Lunch", time:"prepped", protein:"≈52g P", icon:"chicken",
+      items:[["chicken",1,"200g chicken / turkey"],["rice",1,"70g rice or 220g potato"],["veg",1,"big plate veg, 1 tsp oil"]],
+      text:"More chicken, slightly less rice, oil measured (1 tsp, not a pour). Veg volume keeps you full." },
+    { name:"Snack", time:"30s", protein:"≈28g P", icon:"yogurt",
+      items:[["yogurt",1,"250g quark / 0% Greek yogurt"],["nuts",1,"10–12 almonds max"]],
+      text:"Bigger quark, smaller nuts — nuts are where cut calories hide. Count them, don't pour." },
+    { name:"Dinner", time:"8 min", protein:"≈42g P", icon:"fish",
+      items:[["fish",1,"200g white fish / tuna"],["salad",1,"salad or frozen veg, 1 tsp oil"]],
+      text:"Lean fish over beef most nights on the cut. Big veg volume, measured oil." },
+  ],
+  fast: [
+    ["Pre-made overnight oats", "Night before: 80g oats + milk + 1 scoop whey in a jar. Grab & eat cold. 0 min AM."],
+    ["Whey + banana shake", "1.5 scoops whey + banana + milk, blend 30s. ~45g protein, drink it walking out."],
+    ["Egg whites pre-cooked", "Boil 6 eggs Sunday. AM: 3 whole + carton whites scrambled 3 min, or eat boiled cold."],
+    ["Quark bowl", "250g quark + frozen berries + honey + handful oats. No cooking, ~30g protein."],
+  ],
+  notes: [
+    "CUT RULES: carbs stay ≥150g around training. The deficit comes from fat + portions. Same as always.",
+    "Weigh DAILY on the cut, same morning conditions — but judge only the 7-day average.",
+    "Target loss: 0.5–0.7kg/week. Faster = you are losing muscle and water, slow down.",
+    "8–10k steps/day outside the gym. This is the silent fat-loss lever — non-negotiable on the cut.",
+    "Alcohol + weekend meals out are where cuts die in Barcelona. 1 free meal/week, planned, not a blowout.",
+    "Feel flat 2+ days in a row: add 30–40g carbs around training for 2 days. Do NOT quit.",
+    "Vacuum holds 3×20s daily. Water ≥3L. Sleep 7h+ — under-sleeping raises hunger hormones.",
+  ],
+  cutOrder: [
+    ["1. Protein", "Never cut — 160–175g locked", "#30D158"],
+    ["2. Training carbs", "Keep ≥150–180g, around AM workout", "#30D158"],
+    ["3. Fat", "Cut here first — smaller oil/nuts/cheese", "#FF9F0A"],
+    ["4. Portions", "Trim overall size last", "#FF9F0A"],
+  ],
+};
+
+const SHOPPING = [
+  { cat: "Protein", items: [
+    "Pechuga de pollo (chicken breast) 1.5kg",
+    "Pavo / turkey fillets ×1",
+    "Huevos ×30",
+    "Claras de huevo (egg white carton) ×1",
+    "Merluza/panga congelada (frozen fish) ×1 bag",
+    "Atún en lata al natural ×6",
+    "Yogur griego / Quark Hacendado ×4-6",
+    "Leche 2L",
+    "Whey protein (Hacendado or bulk online)",
+    "Lentejas / garbanzos",
+  ]},
+  { cat: "Carbs", items: [
+    "Avena (oats) 1kg", "Arroz 1kg", "Patatas 2kg",
+    "Pan integral ×1", "Plátanos ×1 bunch", "Tortitas de arroz",
+  ]},
+  { cat: "Fats", items: [
+    "Aceite de oliva virgen extra ×1", "Frutos secos (almendras/nueces) ×1", "Aguacate ×2-3",
+  ]},
+  { cat: "Veg", items: [
+    "Verdura congelada (brócoli/judías) ×2", "Espinacas ×1",
+    "Tomate, pepino, lechuga", "Cebolla, ajo",
+  ]},
+  { cat: "Extras", items: [
+    "Café", "Especias (pimentón, comino, pimienta)", "Salsa soja / mostaza / vinagre",
+  ]},
+];
+
+// ============================ STORAGE ============================
+const logKey = (id) => `log:${id}`;
+const shopKey = "shop:checked";
+async function loadLog(id){ try{const r=await window.storage.get(logKey(id));return r?JSON.parse(r.value):[];}catch{return [];} }
+async function saveLog(id,e){ try{await window.storage.set(logKey(id),JSON.stringify(e));}catch(x){console.error(x);} }
+async function loadShop(){ try{const r=await window.storage.get(shopKey);return r?JSON.parse(r.value):{};}catch{return {};} }
+async function saveShop(o){ try{await window.storage.set(shopKey,JSON.stringify(o));}catch(x){console.error(x);} }
+const progKey = "progress:entries";
+async function loadProg(){ try{const r=await window.storage.get(progKey);return r?JSON.parse(r.value):[];}catch{return [];} }
+async function saveProg(e){ try{await window.storage.set(progKey,JSON.stringify(e));}catch(x){console.error(x);} }
+
+// ============================ iOS PRIMITIVES ============================
+const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
+const C = {
+  bg: "#000000", card: "#1C1C1E", card2: "#2C2C2E", sep: "#38383A",
+  label: "#FFFFFF", label2: "#8E8E93", label3: "#636366",
+};
+
+function Group({ header, footer, children }) {
+  return (
+    <div style={{ marginBottom: 26 }}>
+      {header && <div style={{ fontSize: 13, color: C.label2, textTransform: "uppercase", letterSpacing: 0.4, margin: "0 16px 7px" }}>{header}</div>}
+      <div style={{ background: C.card, borderRadius: 12, overflow: "hidden" }}>{children}</div>
+      {footer && <div style={{ fontSize: 13, color: C.label2, margin: "7px 16px 0", lineHeight: 1.4 }}>{footer}</div>}
+    </div>
+  );
+}
+function Row({ children, onClick, last, style }) {
+  return (
+    <div onClick={onClick} style={{
+      display: "flex", alignItems: "center", padding: "12px 16px",
+      borderBottom: last ? "none" : `0.5px solid ${C.sep}`,
+      cursor: onClick ? "pointer" : "default", ...style }}>{children}</div>
+  );
+}
+
+function Icon({ name, color, size = 26 }) {
+  const s = { width: size, height: size, display: "block" };
+  const st = { fill: "none", stroke: color, strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (name === "train") return (<svg viewBox="0 0 24 24" style={s}><g {...st}>
+    <path d="M6.5 9v6M17.5 9v6M4 10.5v3M20 10.5v3M6.5 12h11"/></g></svg>);
+  if (name === "diet") return (<svg viewBox="0 0 24 24" style={s}><g {...st}>
+    <path d="M6 3v7a3 3 0 0 0 6 0V3M9 3v18M18 3c-1.5 1-2 3-2 6s.5 4 2 4v8"/></g></svg>);
+  if (name === "shop") return (<svg viewBox="0 0 24 24" style={s}><g {...st}>
+    <path d="M5 8h14l-1 12H6L5 8zM8.5 8V6a3.5 3.5 0 0 1 7 0v2"/></g></svg>);
+  if (name === "progress") return (<svg viewBox="0 0 24 24" style={s}><g {...st}>
+    <path d="M4 19V5M4 19h16M7 15l3-4 3 3 5-7"/></g></svg>);
+  if (name === "plan") return (<svg viewBox="0 0 24 24" style={s}><g {...st}>
+    <rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></g></svg>);
+  return null;
+}
+
+// Hand-drawn style food sketches for portion visuals
+function Food({ kind, size = 46 }) {
+  const s = { width: size, height: size, display: "block" };
+  const ln = (c) => ({ fill:"none", stroke:c, strokeWidth:1.6, strokeLinecap:"round", strokeLinejoin:"round" });
+  switch (kind) {
+    case "banana": return (<svg viewBox="0 0 48 48" style={s}><g {...ln("#E8B84B")}>
+      <path d="M10 16c2 12 12 20 24 18 3-.5 4-2 3-4-8 3-18-3-21-15-.4-1.6-2.3-1.2-2 1z" fill="#F4D06F"/>
+      <path d="M34 30c2-1 3-2 3-4"/></g></svg>);
+    case "eggs": return (<svg viewBox="0 0 48 48" style={s}>
+      <ellipse cx="18" cy="26" rx="14" ry="11" fill="#FFFDF7" stroke="#E8E0CF" strokeWidth="1.4"/>
+      <circle cx="18" cy="26" r="5.5" fill="#F4B740"/>
+      <ellipse cx="32" cy="22" rx="11" ry="9" fill="#FFFDF7" stroke="#E8E0CF" strokeWidth="1.4"/>
+      <circle cx="32" cy="22" r="4.5" fill="#F4B740"/></svg>);
+    case "oats": return (<svg viewBox="0 0 48 48" style={s}><g {...ln("#C9A876")}>
+      <path d="M8 22h32l-3 14a3 3 0 0 1-3 2.5H14a3 3 0 0 1-3-2.5z" fill="#E8D5B5"/>
+      <path d="M16 27c2 1 4 1 6 0M26 30c2 1 4 1 6 0M20 33c2 1 3 1 5 0"/></g></svg>);
+    case "whey": return (<svg viewBox="0 0 48 48" style={s}><g {...ln("#9C7BE0")}>
+      <path d="M16 14h16l-1.5 24a3 3 0 0 1-3 2.8H20.5a3 3 0 0 1-3-2.8z" fill="#C9B6F0"/>
+      <path d="M16 14l1-4h14l1 4M18 24h12"/></g></svg>);
+    case "chicken": return (<svg viewBox="0 0 48 48" style={s}><g {...ln("#C98A5E")}>
+      <path d="M12 30c-2-8 4-16 12-16s14 6 12 16c-1 5-7 6-12 6s-11-1-12-6z" fill="#E8B98E"/>
+      <path d="M18 26c2-2 4-2 6 0M26 28c1.5-1.5 3-1.5 4 0"/></g></svg>);
+    case "rice": return (<svg viewBox="0 0 48 48" style={s}><g {...ln("#D8CFC0")}>
+      <path d="M8 26c0-2 7-4 16-4s16 2 16 4-7 5-16 5-16-3-16-5z" fill="#F2EEE5"/>
+      <path d="M14 25.5h.2M20 24h.2M27 25h.2M33 26h.2M17 28h.2M24 27h.2M30 28h.2"/></g></svg>);
+    case "veg": return (<svg viewBox="0 0 48 48" style={s}>
+      <circle cx="16" cy="26" r="7" fill="#6FBF73" stroke="#4E9E52" strokeWidth="1.4"/>
+      <circle cx="28" cy="22" r="6" fill="#7FC97F" stroke="#4E9E52" strokeWidth="1.4"/>
+      <path d="M30 30l5 6" stroke="#E8734A" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="34" cy="34" r="4" fill="#F4A04A" stroke="#D8823A" strokeWidth="1.2"/></svg>);
+    case "yogurt": return (<svg viewBox="0 0 48 48" style={s}><g {...ln("#BFD0E0")}>
+      <path d="M14 18h20l-2 18a3 3 0 0 1-3 2.6H19a3 3 0 0 1-3-2.6z" fill="#F2F6FA"/>
+      <path d="M14 18l1.5-5h17L34 18" fill="#E2ECF4"/></g></svg>);
+    case "fish": return (<svg viewBox="0 0 48 48" style={s}><g {...ln("#7FA8C9")}>
+      <path d="M8 24c6-9 22-9 28 0-6 9-22 9-28 0z" fill="#B6D2E8"/>
+      <path d="M36 24l6-5v10z" fill="#B6D2E8"/><circle cx="16" cy="22" r="1.3" fill="#33627F" stroke="none"/></g></svg>);
+    case "salad": return (<svg viewBox="0 0 48 48" style={s}>
+      <path d="M10 26h28c-1 7-6 11-14 11s-13-4-14-11z" fill="#8FD18F" stroke="#5AAE5E" strokeWidth="1.4"/>
+      <circle cx="20" cy="28" r="3" fill="#E8734A"/><circle cx="28" cy="29" r="2.5" fill="#F4A04A"/></svg>);
+    case "rice cakes": return (<svg viewBox="0 0 48 48" style={s}>
+      <circle cx="24" cy="24" r="15" fill="#F2EAD8" stroke="#D8C9A8" strokeWidth="1.6"/>
+      <g fill="#D8C9A8"><circle cx="19" cy="20" r="1.3"/><circle cx="28" cy="19" r="1.3"/><circle cx="24" cy="25" r="1.3"/><circle cx="18" cy="28" r="1.3"/><circle cx="30" cy="27" r="1.3"/><circle cx="24" cy="31" r="1.3"/></g></svg>);
+    case "whites": return (<svg viewBox="0 0 48 48" style={s}>
+      <ellipse cx="24" cy="26" rx="15" ry="12" fill="#FFFDF7" stroke="#E8E0CF" strokeWidth="1.4"/>
+      <ellipse cx="24" cy="26" rx="7" ry="6" fill="none" stroke="#EDE4D2" strokeWidth="1.2"/></svg>);
+    case "nuts": return (<svg viewBox="0 0 48 48" style={s}><g stroke="#A87B4A" strokeWidth="1.3" fill="#C89A5E">
+      <ellipse cx="18" cy="24" rx="6" ry="8" transform="rotate(-20 18 24)"/>
+      <ellipse cx="29" cy="27" rx="5.5" ry="7.5" transform="rotate(15 29 27)" fill="#B98A4E"/>
+      <ellipse cx="25" cy="18" rx="5" ry="6.5" transform="rotate(-5 25 18)" fill="#D8A86E"/></g></svg>);
+    default: return null;
+  }
+}
+
+// ============================ TRACKER ============================
+function NumField({ value, onChange, placeholder }) {
+  return (
+    <input type="number" inputMode="decimal" placeholder={placeholder} value={value} onChange={onChange}
+      style={{ flex: 1, background: C.card2, border: "none", borderRadius: 9, color: C.label,
+        padding: "11px 12px", fontSize: 17, outline: "none", minWidth: 0, fontFamily: FONT,
+        WebkitAppearance: "none", textAlign: "center" }}/>
+  );
+}
+
+// Movement-type sketches shown next to each exercise
+function Move({ t, c, size = 40 }) {
+  const s = { width:size, height:size, display:"block" };
+  // figure helpers: head circle + body strokes. viewBox 44x44
+  const L = { fill:"none", stroke:c, strokeWidth:2, strokeLinecap:"round", strokeLinejoin:"round" };
+  const eq = { fill:"none", stroke:c, strokeWidth:2.4, strokeLinecap:"round", strokeLinejoin:"round", opacity:0.55 };
+  const head = (cx,cy,r=3.2)=> <circle cx={cx} cy={cy} r={r} {...L}/>;
+  switch (t) {
+    // ---- PRESS (lying bench press) ----
+    case "press": return (<svg viewBox="0 0 44 44" style={s}>
+      <path d="M6 30h26" {...L}/>{head(10,26)}
+      <g {...L}><path d="M13 27h14M27 27l4-6M20 27l5-6"/></g>
+      <path d="M21 18h12" {...eq}/></svg>);
+    // ---- OVERHEAD PRESS (standing, arms up) ----
+    case "ohp": return (<svg viewBox="0 0 44 44" style={s}>{head(22,11)}
+      <g {...L}><path d="M22 14v14M22 16l-6-6M22 16l6-6M22 28l-5 9M22 28l5 9"/></g>
+      <path d="M13 9h18" {...eq}/></svg>);
+    // ---- LATERAL RAISE (arms out to sides) ----
+    case "lateral": return (<svg viewBox="0 0 44 44" style={s}>{head(22,12)}
+      <g {...L}><path d="M22 15v13M22 19l-10 1M22 19l10 1M22 28l-4 9M22 28l4 9"/></g>
+      <g {...eq}><path d="M9 19h4M31 19h4"/></g></svg>);
+    // ---- FRONT RAISE (arms forward/up) ----
+    case "frontraise": return (<svg viewBox="0 0 44 44" style={s}>{head(20,12)}
+      <g {...L}><path d="M20 15v13M20 18l12-4M20 28l-4 9M20 28l4 9"/></g>
+      <path d="M30 12v6" {...eq}/></svg>);
+    // ---- SHRUG ----
+    case "shrug": return (<svg viewBox="0 0 44 44" style={s}>{head(22,13)}
+      <g {...L}><path d="M22 16v12M14 17h16M14 17v9M30 17v9M22 28l-4 9M22 28l4 9"/></g>
+      <g {...eq}><path d="M12 24v4M32 24v4"/></g></svg>);
+    // ---- CURL (biceps) ----
+    case "curl": return (<svg viewBox="0 0 44 44" style={s}>{head(20,11)}
+      <g {...L}><path d="M20 14v14M20 18l-4 6 6 2M20 18l4 6-6 2M20 28l-4 9M20 28l4 9"/></g>
+      <path d="M14 26h12" {...eq}/></svg>);
+    // ---- PUSHDOWN (triceps, arms down) ----
+    case "pushdown": return (<svg viewBox="0 0 44 44" style={s}>{head(22,11)}
+      <g {...L}><path d="M22 14v14M22 17l-6 9M22 17l6 9M22 28l-5 9M22 28l5 9"/></g>
+      <path d="M16 8v16" {...eq}/></svg>);
+    // ---- DIP ----
+    case "dip": return (<svg viewBox="0 0 44 44" style={s}>{head(22,13)}
+      <g {...L}><path d="M22 16v10M22 18l-6 2M22 18l6 2M22 26l-3 8M22 26l3 8"/></g>
+      <g {...eq}><path d="M14 14v18M30 14v18"/></g></svg>);
+    // ---- PULLUP (hanging, arms up to bar) ----
+    case "pullup": return (<svg viewBox="0 0 44 44" style={s}>
+      <path d="M8 9h28" {...eq}/>{head(22,18)}
+      <g {...L}><path d="M22 21v10M22 22l-6-12M22 22l6-12M22 31l-3 7M22 31l3 7"/></g></svg>);
+    // ---- PULLDOWN (seated, arms up) ----
+    case "pulldown": return (<svg viewBox="0 0 44 44" style={s}>
+      <path d="M10 8h24" {...eq}/>{head(22,16)}
+      <g {...L}><path d="M22 19v9M22 20l-7-11M22 20l7-11M22 28h-5M22 28h5"/></g></svg>);
+    // ---- ROW (bent over, pulling) ----
+    case "row": return (<svg viewBox="0 0 44 44" style={s}>{head(11,16)}
+      <g {...L}><path d="M13 17l16 4M14 18l5 6M28 21l3 5"/></g>
+      <path d="M29 26h6" {...eq}/></svg>);
+    // ---- FACEPULL / REAR DELT ----
+    case "facepull": return (<svg viewBox="0 0 44 44" style={s}>{head(22,12)}
+      <g {...L}><path d="M22 15v13M22 18l-8-3M22 18l8-3M22 28l-4 9M22 28l4 9"/></g>
+      <path d="M8 13v4M36 13v4" {...eq}/></svg>);
+    // ---- SQUAT (deep, bar on back) ----
+    case "squat": return (<svg viewBox="0 0 44 44" style={s}>{head(22,9)}
+      <g {...L}><path d="M22 12v8M16 16h12M22 20l-6 8 4 9M22 20l6 8-4 9"/></g>
+      <path d="M14 14h16" {...eq}/></svg>);
+    // ---- HINGE / RDL (bent forward, flat back) ----
+    case "hinge": return (<svg viewBox="0 0 44 44" style={s}>{head(11,15)}
+      <g {...L}><path d="M13 16l13 3M26 19v15M26 19l5 3"/></g>
+      <path d="M22 24h10" {...eq}/></svg>);
+    // ---- LUNGE ----
+    case "lunge": return (<svg viewBox="0 0 44 44" style={s}>{head(22,10)}
+      <g {...L}><path d="M22 13v9M22 22l-7 6 0 8M22 22l7 6M29 28v8M22 16h6"/></g></svg>);
+    // ---- LEG PRESS (seated push) ----
+    case "legpress": return (<svg viewBox="0 0 44 44" style={s}>{head(11,16)}
+      <g {...L}><path d="M9 18h8M14 16l8 4 6-6"/></g>
+      <path d="M28 8v12" {...eq}/></svg>);
+    // ---- LEG CURL (lying, knee bend) ----
+    case "legcurl": return (<svg viewBox="0 0 44 44" style={s}>{head(9,20)}
+      <g {...L}><path d="M11 21h16l4-8"/></g>
+      <path d="M31 11h5" {...eq}/></svg>);
+    // ---- CALF RAISE (on toes) ----
+    case "calf": return (<svg viewBox="0 0 44 44" style={s}>{head(22,11)}
+      <g {...L}><path d="M22 14v16M22 18l-5 4M22 18l5 4M22 30l-2 6M22 30l2 6"/></g>
+      <path d="M16 38h12" {...eq}/></svg>);
+    // ---- BACK EXTENSION ----
+    case "backext": return (<svg viewBox="0 0 44 44" style={s}>{head(13,14)}
+      <g {...L}><path d="M15 16l14 7M29 23v8"/></g>
+      <path d="M24 28h10" {...eq}/></svg>);
+    // ---- SITUP / flutter (lying, knees up) ----
+    case "situp": return (<svg viewBox="0 0 44 44" style={s}>
+      <path d="M8 32h28" {...eq}/>{head(13,24)}
+      <g {...L}><path d="M15 25l8 3 4-6 6 2"/></g></svg>);
+    // ---- KNEELING CABLE CRUNCH ----
+    case "kneelcrunch": return (<svg viewBox="0 0 44 44" style={s}>{head(18,14)}
+      <g {...L}><path d="M19 17l2 8-6 6M21 25l8 2M19 17l8-4"/></g>
+      <path d="M30 7v8" {...eq}/></svg>);
+    // ---- HANG / leg raise (hanging straight) ----
+    case "hang": return (<svg viewBox="0 0 44 44" style={s}>
+      <path d="M10 8h24" {...eq}/>{head(22,16)}
+      <g {...L}><path d="M22 19v9M22 20l-5-11M22 20l5-11M22 28l8 3"/></g></svg>);
+    // ---- PLANK ----
+    case "plank": return (<svg viewBox="0 0 44 44" style={s}>{head(11,22)}
+      <g {...L}><path d="M13 23l20 6M13 26v6M33 29v5"/></g></svg>);
+    // ---- TWIST (seated russian twist) ----
+    case "twist": return (<svg viewBox="0 0 44 44" style={s}>{head(22,12)}
+      <g {...L}><path d="M22 15v8M22 18l8 4-6 3M22 23l-6 8M22 23l6 8"/></g></svg>);
+    // ---- BURPEE ----
+    case "burpee": return (<svg viewBox="0 0 44 44" style={s}>{head(22,9)}
+      <g {...L}><path d="M22 12v7M22 14l-6-3M22 14l6-3M22 19l-5 7M22 19l5 7"/></g>
+      <path d="M14 30h16" {...eq}/></svg>);
+    // ---- DRAGON FLAG ----
+    case "dragonflag": return (<svg viewBox="0 0 44 44" style={s}>{head(13,28)}
+      <g {...L}><path d="M15 28l16-10M14 28l2-4"/></g>
+      <path d="M11 24v8" {...eq}/></svg>);
+    // ---- KEGEL (seated calm figure) ----
+    case "kegel": return (<svg viewBox="0 0 44 44" style={s}>{head(22,12)}
+      <g {...L}><path d="M22 15v10M22 18l-5 3M22 18l5 3M18 25h8M18 25l-2 7M26 25l2 7"/></g></svg>);
+    default: return (<svg viewBox="0 0 44 44" style={s}>{head(22,12)}
+      <path d="M22 15v10M22 18l-6 3M22 18l6 3M22 25l-4 9M22 25l4 9" {...L}/></svg>);
+  }
+}
+
+function ExerciseCard({ ex, accent }) {
+  const [history, setHistory] = useState(null);
+  const [sets, setSets] = useState([{ kg:"", reps:"" }]);
+  const [open, setOpen] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(()=>{ loadLog(ex.id).then(setHistory); },[ex.id]);
+  const last = history && history.length ? history[history.length-1] : null;
+
+  const updateSet=(i,k,v)=>{ setSets(s=>s.map((x,idx)=>idx===i?{...x,[k]:v}:x)); setSaved(false); };
+  const addSet=()=>setSets(s=>[...s,{kg:s[s.length-1]?.kg||"",reps:""}]);
+  const removeSet=(i)=>setSets(s=>s.length>1?s.filter((_,idx)=>idx!==i):s);
+
+  const logSession=async()=>{
+    const clean=sets.filter(s=>s.kg!==""||s.reps!=="");
+    if(!clean.length) return;
+    const next=[...(history||[]),{date:new Date().toISOString(),sets:clean}];
+    setHistory(next); await saveLog(ex.id,next); setSaved(true);
+    setSets([{kg:clean[clean.length-1].kg,reps:""}]);
+    setTimeout(()=>setSaved(false),1400);
+  };
+  const fmt=(e)=>e.sets.map(s=>`${s.kg||"–"}×${s.reps||"–"}`).join("  ");
+
+  return (
+    <div style={{ background: C.card, borderRadius: 14, padding: 16, marginBottom: 12 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+        <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+          <div style={{ width:46, height:46, borderRadius:10, background:C.card2, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            <Move t={ex.t} c={accent} size={34}/>
+          </div>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 600, color: C.label, letterSpacing: -0.2 }}>{ex.name}</div>
+            <div style={{ fontSize: 14, color: C.label2, marginTop: 1 }}>{ex.scheme}</div>
+          </div>
+        </div>
+        {ex.main && <span style={{ color: accent, fontSize: 11, fontWeight: 700, letterSpacing: 0.6, background: accent+"22", padding: "3px 8px", borderRadius: 6 }}>MAIN</span>}
+      </div>
+      {last && <div style={{ fontSize: 13, color: accent, marginTop: 9, fontVariantNumeric: "tabular-nums" }}>Last · {fmt(last)}</div>}
+
+      <div style={{ marginTop: 13 }}>
+        {sets.map((s,i)=>(
+          <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+            <span style={{ width:18, color:C.label3, fontSize:14, fontVariantNumeric:"tabular-nums" }}>{i+1}</span>
+            <NumField value={s.kg} placeholder="kg" onChange={(e)=>updateSet(i,"kg",e.target.value)}/>
+            <span style={{ color:C.label3 }}>×</span>
+            <NumField value={s.reps} placeholder="reps" onChange={(e)=>updateSet(i,"reps",e.target.value)}/>
+            <button onClick={()=>removeSet(i)} aria-label="remove" style={{
+              background:"none", border:"none", color:C.label3, fontSize:24, width:30, cursor:"pointer", flexShrink:0, lineHeight:1 }}>−</button>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:"flex", gap:10, marginTop:6 }}>
+        <button onClick={addSet} style={{ flex:1, background:C.card2, border:"none", color:"#0A84FF", borderRadius:10,
+          padding:"11px", fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:FONT }}>+ Add set</button>
+        <button onClick={logSession} style={{ flex:1.4, background: saved?"#30D158":accent, border:"none", color:"#fff", borderRadius:10,
+          padding:"11px", fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:FONT, transition:"background .2s" }}>
+          {saved?"Logged ✓":"Log set"}</button>
+      </div>
+
+      {history && history.length>0 && (
+        <button onClick={()=>setOpen(o=>!o)} style={{ width:"100%", background:"none", border:"none", color:C.label2, fontSize:14,
+          padding:"11px 0 2px", cursor:"pointer", fontFamily:FONT }}>
+          {open?"Hide history":`History · ${history.length}`}</button>
+      )}
+      {open && history && (
+        <div style={{ marginTop:6, borderTop:`0.5px solid ${C.sep}`, paddingTop:9 }}>
+          {[...history].reverse().map((e,i)=>(
+            <div key={i} style={{ fontSize:13, color:C.label2, marginBottom:5, fontVariantNumeric:"tabular-nums", display:"flex", gap:10 }}>
+              <span style={{ color:C.label3, width:48, flexShrink:0 }}>{new Date(e.date).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span>
+              <span>{fmt(e)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================ TABS ============================
+// Guided Kegel timer — cycles squeeze/hold/relax with countdown
+function KegelTimer() {
+  const PHASES = [
+    { label:"Get ready", cue:"Find the muscle, breathe", dur:3, color:"#8E8E93" },
+    { label:"SQUEEZE", cue:"Lift & hold", dur:5, color:"#FF2D92" },
+    { label:"RELAX", cue:"Fully let go", dur:5, color:"#30D158" },
+    { label:"SQUEEZE", cue:"Lift & hold", dur:5, color:"#FF2D92" },
+    { label:"RELAX", cue:"Fully let go", dur:5, color:"#30D158" },
+    { label:"SQUEEZE", cue:"Lift & hold", dur:5, color:"#FF2D92" },
+    { label:"RELAX", cue:"Fully let go", dur:5, color:"#30D158" },
+    { label:"QUICK FLICKS", cue:"Fast squeeze + release ×10", dur:20, color:"#0A84FF" },
+    { label:"LONG HOLD", cue:"One max hold — as long as you can", dur:15, color:"#FF9F0A" },
+    { label:"RELAX", cue:"Done — fully release", dur:5, color:"#30D158" },
+  ];
+  const [running, setRunning] = useState(false);
+  const [idx, setIdx] = useState(0);
+  const [left, setLeft] = useState(PHASES[0].dur);
+  const [done, setDone] = useState(false);
+
+  useEffect(()=>{
+    if(!running) return;
+    if(left<=0){
+      if(idx>=PHASES.length-1){ setRunning(false); setDone(true); return; }
+      const n=idx+1; setIdx(n); setLeft(PHASES[n].dur); return;
+    }
+    const id=setTimeout(()=>setLeft(l=>l-1),1000);
+    return ()=>clearTimeout(id);
+  },[running,left,idx]);
+
+  const start=()=>{ setIdx(0); setLeft(PHASES[0].dur); setDone(false); setRunning(true); };
+  const stop=()=>{ setRunning(false); setIdx(0); setLeft(PHASES[0].dur); setDone(false); };
+
+  const p = PHASES[idx];
+  const total = p.dur || 1;
+  const pct = running ? (left/total) : 1;
+  const R=52, CIRC=2*Math.PI*R;
+
+  if(!running && !done){
+    return (
+      <button onClick={start} style={{ width:"100%", background:"#FF2D92", border:"none", color:"#fff",
+        borderRadius:12, padding:"14px", fontSize:16, fontWeight:700, cursor:"pointer", fontFamily:FONT }}>
+        ▶ Start guided session (~1:15)
+      </button>
+    );
+  }
+  if(done){
+    return (
+      <div style={{ textAlign:"center" }}>
+        <div style={{ fontSize:17, fontWeight:700, color:"#30D158", marginBottom:4 }}>Session complete ✓</div>
+        <div style={{ fontSize:13, color:C.label2, marginBottom:12 }}>Do one more round tonight.</div>
+        <button onClick={start} style={{ width:"100%", background:C.card2, border:"none", color:"#FF2D92",
+          borderRadius:12, padding:"12px", fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:FONT }}>Go again</button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ textAlign:"center" }}>
+      <div style={{ position:"relative", width:140, height:140, margin:"0 auto 14px" }}>
+        <svg viewBox="0 0 120 120" style={{ width:"100%", height:"100%", transform:"rotate(-90deg)" }}>
+          <circle cx="60" cy="60" r={R} fill="none" stroke={C.card2} strokeWidth="9"/>
+          <circle cx="60" cy="60" r={R} fill="none" stroke={p.color} strokeWidth="9" strokeLinecap="round"
+            strokeDasharray={CIRC} strokeDashoffset={CIRC*(1-pct)} style={{ transition:"stroke-dashoffset 1s linear, stroke .3s" }}/>
+        </svg>
+        <div style={{ position:"absolute", top:0, left:0, right:0, bottom:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+          <span style={{ fontSize:34, fontWeight:800, color:p.color, fontVariantNumeric:"tabular-nums", letterSpacing:-1 }}>{left}</span>
+          <span style={{ fontSize:11, color:C.label3 }}>{idx+1}/{PHASES.length}</span>
+        </div>
+      </div>
+      <div style={{ fontSize:20, fontWeight:800, color:p.color, letterSpacing:0.5 }}>{p.label}</div>
+      <div style={{ fontSize:14, color:C.label2, marginTop:2, marginBottom:14 }}>{p.cue}</div>
+      <button onClick={stop} style={{ width:"100%", background:C.card2, border:"none", color:"#FF453A",
+        borderRadius:12, padding:"11px", fontSize:15, fontWeight:600, cursor:"pointer", fontFamily:FONT }}>Stop</button>
+    </div>
+  );
+}
+
+function TrainTab({ day, setDay }) {
+  const cur = PROGRAM[day];
+  return (
+    <>
+      <div style={{ display:"flex", gap:8, overflowX:"auto", margin:"0 -2px 20px", paddingBottom:4, WebkitOverflowScrolling:"touch" }}>
+        {DAY_ORDER.map(d=>{
+          const active=d===day;
+          return (
+            <button key={d} onClick={()=>setDay(d)} style={{
+              flexShrink:0, padding:"8px 16px", borderRadius:20, fontSize:15, fontWeight:600, fontFamily:FONT,
+              border:"none", background: active?PROGRAM[d].accent:C.card, color: active?"#fff":C.label2,
+              cursor:"pointer", transition:"all .15s" }}>{PROGRAM[d].name}</button>
+          );
+        })}
+      </div>
+
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontSize:22, fontWeight:700, color:cur.accent, letterSpacing:-0.4 }}>{cur.name}</div>
+        <div style={{ fontSize:15, color:C.label2 }}>{cur.sub} · beat last week</div>
+        <div style={{ fontSize:13, color:C.label3, marginTop:3 }}>⏱ Keep it ≤70 min. Rest 60–90s (mains 2 min). Superset accessories if short on time.</div>
+      </div>
+
+      <div style={{ background:C.card, borderRadius:14, padding:"14px 16px", marginBottom:16, fontSize:14, color:C.label2, lineHeight:1.5 }}>
+        {cur.core}<br/><span style={{ color:C.label3 }}>Cardio: {cur.cardio}</span>
+        {cur.wods && (<div style={{ marginTop:10, borderTop:`0.5px solid ${C.sep}`, paddingTop:10 }}>
+          {cur.wods.map((w,i)=><div key={i} style={{ marginBottom:4 }}>{w}</div>)}
+        </div>)}
+      </div>
+
+      {cur.exercises.map(ex=><ExerciseCard key={ex.id} ex={ex} accent={cur.accent}/>)}
+
+      {/* Pelvic floor daily block */}
+      <div style={{ background:C.card, borderRadius:14, padding:16, marginTop:8 }}>
+        <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:10 }}>
+          <div style={{ width:46, height:46, borderRadius:10, background:C.card2, display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <Move t="kegel" c="#FF2D92" size={32}/>
+          </div>
+          <div>
+            <div style={{ fontSize:17, fontWeight:600, color:C.label }}>Pelvic Floor (daily)</div>
+            <div style={{ fontSize:14, color:C.label2 }}>~5 min · anywhere · not part of the 70</div>
+          </div>
+        </div>
+        <div style={{ fontSize:13, color:C.label2, lineHeight:1.45, marginBottom:10 }}>{PELVIC.intro}</div>
+        <div style={{ fontSize:13, color:C.label3, lineHeight:1.45, marginBottom:14, fontStyle:"italic" }}>{PELVIC.find}</div>
+
+        <div style={{ background:C.card2, borderRadius:12, padding:16, marginBottom:14 }}>
+          <KegelTimer/>
+        </div>
+
+        <div style={{ fontSize:12, color:C.label3, textTransform:"uppercase", letterSpacing:0.4, marginBottom:6 }}>What the timer runs</div>
+        {PELVIC.drills.map((d,i)=>(
+          <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"8px 0", borderBottom:i<PELVIC.drills.length-1?`0.5px solid ${C.sep}`:"none" }}>
+            <div style={{ flex:1 }}>
+              <span style={{ color:"#FF2D92", fontWeight:600, fontSize:14 }}>{d[0]}</span>
+              <span style={{ color:C.label3, fontSize:12, display:"block" }}>{d[2]}</span>
+            </div>
+            <span style={{ color:C.label, fontSize:14, textAlign:"right", flex:1 }}>{d[1]}</span>
+          </div>
+        ))}
+        <div style={{ fontSize:13, color:C.label2, lineHeight:1.45, marginTop:10, borderTop:`0.5px solid ${C.sep}`, paddingTop:10 }}>{PELVIC.note}</div>
+      </div>
+    </>
+  );
+}
+
+function DietTab() {
+  return (
+    <div>
+      <Group header="Daily Targets">
+        {DIET.targets.map((t,i)=>(
+          <Row key={i} last={i===DIET.targets.length-1}>
+            <span style={{ color:C.label, fontSize:17, flex:1 }}>{t[0]}</span>
+            <span style={{ textAlign:"right" }}>
+              <span style={{ color:"#30D158", fontWeight:600, fontSize:17 }}>{t[1]}</span>
+              {t[2] && <span style={{ display:"block", fontSize:12, color:C.label2 }}>{t[2]}</span>}
+            </span>
+          </Row>
+        ))}
+      </Group>
+      <div style={{ fontSize:13, color:C.label2, textTransform:"uppercase", letterSpacing:0.4, margin:"0 16px 7px" }}>Daily Meals</div>
+      {DIET.meals.map((m,i)=>(
+        <div key={i} style={{ background:C.card, borderRadius:14, padding:16, marginBottom:12 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+            <span style={{ color:"#FF9F0A", fontWeight:700, fontSize:16 }}>{m.name}</span>
+            <span style={{ fontSize:12, color:C.label2 }}>
+              <span style={{ background:C.card2, padding:"3px 8px", borderRadius:6, marginRight:6 }}>{m.time}</span>
+              {m.protein}
+            </span>
+          </div>
+          {/* visual portion plate */}
+          <div style={{ display:"flex", gap:14, flexWrap:"wrap", alignItems:"flex-start", marginBottom:10 }}>
+            {m.items.map((it,j)=>(
+              <div key={j} style={{ display:"flex", flexDirection:"column", alignItems:"center", width:64 }}>
+                <div style={{ position:"relative" }}>
+                  <Food kind={it[0]} size={46}/>
+                  {it[1]>1 && <span style={{ position:"absolute", top:-4, right:-6, background:"#0A84FF", color:"#fff", fontSize:11, fontWeight:700, borderRadius:"50%", width:18, height:18, display:"flex", alignItems:"center", justifyContent:"center" }}>{it[1]}</span>}
+                </div>
+                <span style={{ fontSize:11, color:C.label2, textAlign:"center", marginTop:5, lineHeight:1.2 }}>{it[2]}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize:13, color:C.label2, lineHeight:1.45, borderTop:`0.5px solid ${C.sep}`, paddingTop:9 }}>{m.text}</div>
+        </div>
+      ))}
+
+      <Group header="Fastest AM Options (0–4 min)" footer="You said mornings are rushed — these need almost no cooking. Prep the night before where noted.">
+        {DIET.fast.map((f,i)=>(
+          <Row key={i} last={i===DIET.fast.length-1} style={{ flexDirection:"column", alignItems:"stretch" }}>
+            <span style={{ color:"#0A84FF", fontWeight:600, fontSize:15 }}>{f[0]}</span>
+            <span style={{ color:C.label, fontSize:14, marginTop:3, lineHeight:1.4 }}>{f[1]}</span>
+          </Row>
+        ))}
+      </Group>
+
+      <Group header="When Losing Fat — Cut In This Order" footer="Your flat/weak feeling = depleted carbs, not lost muscle. Keep carbs & protein, cut fat first.">
+        {DIET.cutOrder.map((c,i)=>(
+          <Row key={i} last={i===DIET.cutOrder.length-1}>
+            <span style={{ color:c[2], fontWeight:600, fontSize:15, width:130 }}>{c[0]}</span>
+            <span style={{ color:C.label, fontSize:14, flex:1, textAlign:"right" }}>{c[1]}</span>
+          </Row>
+        ))}
+      </Group>
+
+      <Group header="Notes">
+        {DIET.notes.map((n,i)=>(
+          <Row key={i} last={i===DIET.notes.length-1} style={{ alignItems:"flex-start" }}>
+            <span style={{ color:"#30D158", marginRight:10, fontSize:17, lineHeight:1.4 }}>•</span>
+            <span style={{ color:C.label, fontSize:15, lineHeight:1.4 }}>{n}</span>
+          </Row>
+        ))}
+      </Group>
+    </div>
+  );
+}
+
+function ShopTab() {
+  const [checked, setChecked] = useState({});
+  useEffect(()=>{ loadShop().then(setChecked); },[]);
+  const toggle=(item)=>{ const next={...checked,[item]:!checked[item]}; setChecked(next); saveShop(next); };
+  const clear=()=>{ setChecked({}); saveShop({}); };
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"0 4px 16px" }}>
+        <span style={{ fontSize:15, color:C.label2 }}>Mercadona · Barcelona</span>
+        <button onClick={clear} style={{ background:"none", border:"none", color:"#0A84FF", fontSize:15, cursor:"pointer", fontFamily:FONT }}>Reset</button>
+      </div>
+      {SHOPPING.map((g,gi)=>(
+        <Group key={gi} header={g.cat}>
+          {g.items.map((item,ii)=>(
+            <Row key={ii} onClick={()=>toggle(item)} last={ii===g.items.length-1}>
+              <div style={{ width:22, height:22, borderRadius:"50%", flexShrink:0, marginRight:12,
+                border: checked[item]?"none":`2px solid ${C.label3}`,
+                background: checked[item]?"#30D158":"transparent",
+                display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:13, fontWeight:900 }}>
+                {checked[item] && "✓"}</div>
+              <span style={{ fontSize:16, color: checked[item]?C.label3:C.label, textDecoration: checked[item]?"line-through":"none" }}>{item}</span>
+            </Row>
+          ))}
+        </Group>
+      ))}
+      <div style={{ fontSize:13, color:C.label3, textAlign:"center", marginBottom:10 }}>Prices vary in store — this is the list, not a budget.</div>
+    </div>
+  );
+}
+
+// ============================ PROGRESS ============================
+function MiniChart({ data, color, label, unit }) {
+  if (!data.length) return null;
+  const W = 320, H = 120, pad = 8;
+  const vals = data.map(d => d.v);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const range = max - min || 1;
+  const n = data.length;
+  const x = (i) => n === 1 ? W/2 : pad + (i/(n-1))*(W-2*pad);
+  const y = (v) => H-pad - ((v-min)/range)*(H-2*pad);
+  const pts = data.map((d,i)=>`${x(i)},${y(d.v)}`).join(" ");
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+        <span style={{ fontSize:13, color:C.label2 }}>{label}</span>
+        <span style={{ fontSize:13, color }}>{data[data.length-1].v}{unit} <span style={{ color:C.label3 }}>now</span></span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:"auto", display:"block" }}>
+        {n>1 && <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>}
+        {data.map((d,i)=>(<circle key={i} cx={x(i)} cy={y(d.v)} r={n===1?4:3} fill={color}/>))}
+      </svg>
+    </div>
+  );
+}
+
+function ProgressTab() {
+  const [entries, setEntries] = useState([]);
+  const [w, setW] = useState("");
+  const [waist, setWaist] = useState("");
+  useEffect(()=>{ loadProg().then(setEntries); },[]);
+
+  const add = async () => {
+    if (w==="" && waist==="") return;
+    const e = { date: new Date().toISOString(), w: w===""?null:parseFloat(w), waist: waist===""?null:parseFloat(waist) };
+    const next = [...entries, e].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    setEntries(next); await saveProg(next); setW(""); setWaist("");
+  };
+  const removeLast = async () => {
+    const next = entries.slice(0,-1); setEntries(next); await saveProg(next);
+  };
+
+  const wData = entries.filter(e=>e.w!=null).map(e=>({v:e.w}));
+  const waistData = entries.filter(e=>e.waist!=null).map(e=>({v:e.waist}));
+
+  // photo reminder logic — based on last logged photo date
+  const lastPhoto = entries.filter(e=>e.photo).slice(-1)[0];
+  const daysSince = lastPhoto ? Math.floor((Date.now()-new Date(lastPhoto.date))/(1000*60*60*24)) : null;
+  const markPhoto = async () => {
+    const next = [...entries, { date:new Date().toISOString(), photo:true, w:null, waist:null }].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    setEntries(next); await saveProg(next);
+  };
+
+  return (
+    <div>
+      <Group header="Log Today">
+        <Row>
+          <span style={{ color:C.label, fontSize:16, flex:1 }}>Bodyweight</span>
+          <input type="number" inputMode="decimal" placeholder="kg" value={w} onChange={e=>setW(e.target.value)}
+            style={{ width:90, background:C.card2, border:"none", borderRadius:8, color:C.label, padding:"9px 12px", fontSize:16, textAlign:"center", outline:"none", fontFamily:FONT }}/>
+        </Row>
+        <Row last>
+          <span style={{ color:C.label, fontSize:16, flex:1 }}>Waist</span>
+          <input type="number" inputMode="decimal" placeholder="cm" value={waist} onChange={e=>setWaist(e.target.value)}
+            style={{ width:90, background:C.card2, border:"none", borderRadius:8, color:C.label, padding:"9px 12px", fontSize:16, textAlign:"center", outline:"none", fontFamily:FONT }}/>
+        </Row>
+      </Group>
+      <button onClick={add} style={{ width:"100%", background:"#0A84FF", border:"none", color:"#fff", borderRadius:12,
+        padding:"13px", fontSize:16, fontWeight:600, cursor:"pointer", fontFamily:FONT, marginBottom:26 }}>Save entry</button>
+
+      {wData.length>0 && (
+        <Group header="Bodyweight Trend">
+          <div style={{ padding:16 }}><MiniChart data={wData} color="#0A84FF" label="Weight" unit="kg"/></div>
+        </Group>
+      )}
+      {waistData.length>0 && (
+        <Group header="Waist Trend" footer="The number that matters most for the lower abs. Aim for a slow steady drop.">
+          <div style={{ padding:16 }}><MiniChart data={waistData} color="#30D158" label="Waist" unit="cm"/></div>
+        </Group>
+      )}
+
+      <Group header="Progress Photos" footer={daysSince==null ? "Take your first set of 4 angles today as your baseline." : daysSince>=14 ? "Due now — shoot the same 4 angles, same light, same posture." : `Next photo in ${14-daysSince} days.`}>
+        <Row last onClick={markPhoto}>
+          <span style={{ flex:1, color: (daysSince==null||daysSince>=14) ? "#FF9F0A" : C.label, fontSize:16 }}>
+            {daysSince==null ? "Mark baseline photo taken" : daysSince>=14 ? "Mark photo taken (due)" : "Mark photo taken"}
+          </span>
+          <span style={{ color:C.label3, fontSize:14 }}>every 14d</span>
+        </Row>
+      </Group>
+
+      {entries.filter(e=>e.w!=null||e.waist!=null).length>0 && (
+        <Group header="History">
+          {[...entries].filter(e=>e.w!=null||e.waist!=null).reverse().map((e,i,arr)=>(
+            <Row key={i} last={i===arr.length-1}>
+              <span style={{ color:C.label3, fontSize:14, width:60 }}>{new Date(e.date).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</span>
+              <span style={{ flex:1, textAlign:"right", color:C.label, fontSize:15, fontVariantNumeric:"tabular-nums" }}>
+                {e.w!=null && `${e.w}kg`}{e.w!=null&&e.waist!=null && " · "}{e.waist!=null && `${e.waist}cm`}
+              </span>
+            </Row>
+          ))}
+        </Group>
+      )}
+      {entries.length>0 && (
+        <button onClick={removeLast} style={{ width:"100%", background:"none", border:"none", color:"#FF453A", fontSize:15, cursor:"pointer", fontFamily:FONT, padding:"8px" }}>Undo last entry</button>
+      )}
+
+      <div style={{ background:C.card, borderRadius:14, padding:16, marginTop:10, fontSize:14, color:C.label2, lineHeight:1.5 }}>
+        <span style={{ color:C.label, fontWeight:600 }}>Cut phase (from 83kg):</span> ~6–8kg of fat to a full six-pack. At 0.5–0.7kg/week that is <span style={{ color:"#FF9F0A" }}>10–14 weeks</span> — visibly tighter in 2, leaner in 6, abs at the end. Do not chase faster: that is the crash-cut trap that made you quit before.
+      </div>
+    </div>
+  );
+}
+
+// ============================ PLAN (4-WEEK MONTH) ============================
+function dateForCell(wkIdx, dayIdx) {
+  const start = new Date(BLOCK_START + "T00:00:00");
+  const d = new Date(start);
+  d.setDate(start.getDate() + wkIdx*7 + dayIdx);
+  return d;
+}
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+
+function PlanTab({ goToDay }) {
+  const today = new Date();
+  const start = new Date(BLOCK_START + "T00:00:00");
+  const diffDays = Math.floor((today - start)/(1000*60*60*24));
+  const curWeek = diffDays>=0 && diffDays<28 ? Math.floor(diffDays/7) : (diffDays<0 ? 0 : -1);
+  const dayNum = diffDays>=0 && diffDays<28 ? diffDays+1 : null;
+
+  // done-days persistence
+  const [done, setDone] = useState({});
+  useEffect(()=>{ (async()=>{ try{ const r=await window.storage.get("plan:done"); setDone(r?JSON.parse(r.value):{});}catch{ setDone({});} })(); },[]);
+  const toggleDone = async (key, e) => {
+    e.stopPropagation();
+    const next = {...done, [key]: !done[key]};
+    if(!next[key]) delete next[key];
+    setDone(next);
+    try{ await window.storage.set("plan:done", JSON.stringify(next)); }catch(x){ console.error(x); }
+  };
+  const doneCount = Object.keys(done).length;
+
+  return (
+    <div>
+      <div style={{ background:C.card, borderRadius:14, padding:"14px 16px", marginBottom:18 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:6 }}>
+          <span style={{ fontSize:17, fontWeight:700, color:"#0A84FF" }}>
+            {dayNum ? `Day ${dayNum} of 28` : "Block complete"}
+          </span>
+          <span style={{ fontSize:13, color:C.label2 }}>{doneCount}/28 done</span>
+        </div>
+        {/* progress bar */}
+        <div style={{ height:6, background:C.card2, borderRadius:3, overflow:"hidden", marginBottom:10 }}>
+          <div style={{ height:"100%", width:`${Math.min(100,(doneCount/28)*100)}%`, background:"#30D158", borderRadius:3, transition:"width .3s" }}/>
+        </div>
+        <div style={{ fontSize:13, color:C.label2, lineHeight:1.5 }}>
+          CUT block · Day 1 = <span style={{ color:C.label }}>Sat Jul 11</span>. Hold strength, drop fat. Tap the circle when you finish a day{curWeek>=0 && <span style={{ color:"#0A84FF" }}> · Week {curWeek+1}</span>}.
+        </div>
+      </div>
+
+      {MONTH.map((w, wi)=>{
+        const isCur = wi===curWeek;
+        return (
+          <div key={w.wk} style={{ marginBottom:22, border: isCur?`1px solid #0A84FF55`:"none", borderRadius:16, padding: isCur?12:0, background: isCur?"#0A84FF10":"transparent" }}>
+            <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", margin:"0 4px 4px" }}>
+              <span style={{ fontSize:19, fontWeight:700, color: isCur?"#0A84FF":C.label }}>Week {w.wk}</span>
+              <span style={{ fontSize:13, fontWeight:600, color:"#FF9F0A" }}>{w.focus}</span>
+            </div>
+            <div style={{ fontSize:13, color:C.label2, lineHeight:1.45, margin:"0 4px 10px" }}>{w.detail}</div>
+
+            <div style={{ background:C.card, borderRadius:12, overflow:"hidden" }}>
+              {w.days.map((sess, di)=>{
+                const m = SESSION_META[sess];
+                const d = dateForCell(wi, di);
+                const isToday = sameDay(d, today);
+                const tappable = ["push","pull","legs","delts","cond","cond2"].includes(sess);
+                const key = `${wi}-${di}`;
+                const isDone = !!done[key];
+                const wd = d.toLocaleDateString(undefined,{weekday:"short"});
+                return (
+                  <div key={di} onClick={()=> tappable && goToDay && goToDay(sess==="cond2"?"cond":sess)}
+                    style={{ display:"flex", alignItems:"center", padding:"11px 14px",
+                      borderBottom: di<w.days.length-1?`0.5px solid ${C.sep}`:"none",
+                      background: isToday?"#0A84FF22":"transparent", cursor: tappable?"pointer":"default",
+                      opacity: isDone?0.55:1 }}>
+                    {/* done checkmark circle */}
+                    <div onClick={(e)=>toggleDone(key,e)} style={{
+                      width:26, height:26, borderRadius:"50%", flexShrink:0, marginRight:11,
+                      border: isDone?"none":`2px solid ${C.label3}`,
+                      background: isDone?"#30D158":"transparent",
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      color:"#fff", fontSize:14, fontWeight:900, cursor:"pointer" }}>
+                      {isDone && "✓"}
+                    </div>
+                    <div style={{ width:38, flexShrink:0 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color: isToday?"#0A84FF":C.label2 }}>{wd}</div>
+                      <div style={{ fontSize:11, color:C.label3 }}>{d.getDate()}/{d.getMonth()+1}</div>
+                    </div>
+                    <div style={{ width:9, height:9, borderRadius:"50%", background:m.accent, margin:"0 10px", flexShrink:0 }}/>
+                    <span style={{ flex:1, fontSize:15, color: sess==="off"?C.label3:C.label, fontWeight: isToday?600:400, textDecoration: isDone?"line-through":"none" }}>{m.label}</span>
+                    {isToday && <span style={{ fontSize:11, fontWeight:700, color:"#0A84FF", background:"#0A84FF22", padding:"2px 7px", borderRadius:5, marginRight:6 }}>TODAY</span>}
+                    {tappable && <span style={{ color:C.label3, fontSize:18 }}>›</span>}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ fontSize:12, color:C.label3, margin:"8px 4px 0", lineHeight:1.4 }}>
+              <span style={{ color:"#BF5AF2", fontWeight:600 }}>WOD:</span> {w.wod}
+            </div>
+          </div>
+        );
+      })}
+
+      <div style={{ background:C.card, borderRadius:14, padding:16, fontSize:13, color:C.label2, lineHeight:1.5 }}>
+        Tap a row to open the session · tap the circle to mark the day done. Rest days count too — check them off to keep the streak honest.
+      </div>
+    </div>
+  );
+}
+
+
+// ============================ ROOT ============================
+const TABS = [
+  { id:"plan", label:"Plan", icon:"plan" },
+  { id:"train", label:"Train", icon:"train" },
+  { id:"diet", label:"Diet", icon:"diet" },
+  { id:"shop", label:"Shop", icon:"shop" },
+  { id:"progress", label:"Progress", icon:"progress" },
+];
+const TITLES = { plan:"This Month", train:"Training", diet:"Diet", shop:"Shopping", progress:"Progress" };
+
+function App() {
+  const [tab, setTab] = useState("plan");
+  const [day, setDay] = useState("push");
+  const goToDay = (d) => { setDay(d); setTab("train"); };
+  return (
+    <div style={{ minHeight:"100vh", background:C.bg, color:C.label, fontFamily:FONT, WebkitFontSmoothing:"antialiased" }}>
+      <div style={{ maxWidth:480, margin:"0 auto", padding:"12px 16px 100px" }}>
+        <div style={{ paddingTop:8, marginBottom:18 }}>
+          <div style={{ fontSize:13, color:C.label2, letterSpacing:0.3 }}>Amin · Recomp Block</div>
+          <h1 style={{ fontSize:34, fontWeight:700, margin:"2px 0 0", letterSpacing:-0.8 }}>{TITLES[tab]}</h1>
+        </div>
+        {tab==="plan" && <PlanTab goToDay={goToDay}/>}
+        {tab==="train" && <TrainTab day={day} setDay={setDay}/>}
+        {tab==="diet" && <DietTab/>}
+        {tab==="shop" && <ShopTab/>}
+        {tab==="progress" && <ProgressTab/>}
+      </div>
+
+      <div style={{ position:"fixed", bottom:0, left:0, right:0,
+        background:"rgba(20,20,22,0.82)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
+        borderTop:`0.5px solid ${C.sep}`, padding:"8px 0 max(8px, env(safe-area-inset-bottom))" }}>
+        <div style={{ display:"flex", maxWidth:480, margin:"0 auto" }}>
+          {TABS.map(t=>{
+            const active=t.id===tab;
+            const color = active ? "#0A84FF" : C.label3;
+            return (
+              <button key={t.id} onClick={()=>setTab(t.id)} style={{
+                flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3,
+                background:"none", border:"none", cursor:"pointer", padding:"4px 0", fontFamily:FONT }}>
+                <Icon name={t.icon} color={color} size={24}/>
+                <span style={{ fontSize:9.5, color, fontWeight:500, letterSpacing:0 }}>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
