@@ -348,33 +348,40 @@ const DIET = {
     items: [["banana", 1, "banana"], ["rice cakes", 2, "or 2 rice cakes"]],
     text: "Coffee + 1 banana (or 2 rice cakes). Keep this — training fasted on a cut costs muscle."
   }, {
-    name: "Breakfast (post)",
-    time: "3 min",
+    name: "Post-workout",
+    time: "2 min",
     protein: "≈37g P",
     icon: "eggs",
-    items: [["eggs", 2, "eggs"], ["yogurt", 1, "YoPRO drink (25g P)"]],
-    text: "Your real breakfast — works. It is ~20g lighter in protein than ideal, so lunch + snack below are bumped to cover it. Add 40g oats here on heavy training days if you feel flat."
+    items: [["eggs", 2, "eggs (boil night before)"], ["whey", 1, "shake or YoPRO"]],
+    text: "Eggs + shake right after training: whey hits fast, eggs carry you to lunch. On legs/conditioning days add 40g oats — that is your anti-flat insurance."
   }, {
     name: "Lunch",
     time: "prepped",
     protein: "≈58g P",
     icon: "chicken",
     items: [["chicken", 1, "230g chicken / turkey"], ["rice", 1, "80g rice or 250g potato"], ["veg", 1, "big plate veg, 1 tsp oil"]],
-    text: "BUMPED (+30g chicken, + a bit more rice) to cover the lighter breakfast. This is now your biggest meal — carbs here fuel tomorrow morning."
+    text: "Your ONLY carb meal — full portion stays, never trim it. 230g chicken (or turkey/lean meat). Carbs here fuel tomorrow morning since dinner is carb-free."
   }, {
-    name: "Snack",
+    name: "Afternoon (~5pm)",
     time: "30s",
-    protein: "≈33g P",
-    icon: "yogurt",
-    items: [["yogurt", 1, "250g quark / 0% Greek"], ["whey", 1, "+ ½ scoop whey stirred in"], ["nuts", 1, "10 almonds max"]],
-    text: "Quark with half a scoop of whey stirred in (tastes better too). Nuts counted, not poured."
+    protein: "≈25g P",
+    icon: "whey",
+    items: [["whey", 1, "shake or YoPRO"]],
+    text: "One shake or YoPRO, nothing else needed. Bridges lunch to dinner so you do not arrive starving."
   }, {
     name: "Dinner",
     time: "8 min",
-    protein: "≈42g P",
+    protein: "≈38g P",
     icon: "fish",
-    items: [["fish", 1, "200g white fish / tuna"], ["salad", 1, "salad or frozen veg, 1 tsp oil"]],
-    text: "Lean fish over beef most nights on the cut. Big veg volume, measured oil."
+    items: [["fish", 1, "180-200g chicken / fish / lean meat"], ["salad", 1, "veg or salad, 1 tsp oil"]],
+    text: "Protein + veg, no carbs at night — fine ONLY because lunch keeps its full rice/potato. Do not trim lunch carbs too."
+  }, {
+    name: "Dessert (after dinner)",
+    time: "1 min",
+    protein: "≈22g P",
+    icon: "yogurt",
+    items: [["yogurt", 1, "queso batido / yogurt 150-200g"], ["whey", 1, "+ ½ scoop whey or cinnamon/berries"]],
+    text: "Slow casein protein before bed feeds muscle overnight. Queso batido is smooth (no lumps) and cheap at Mercadona. Dessert with a job."
   }],
   fast: [["Pre-made overnight oats", "Night before: 80g oats + milk + 1 scoop whey in a jar. Grab & eat cold. 0 min AM."], ["Whey + banana shake", "1.5 scoops whey + banana + milk, blend 30s. ~45g protein, drink it walking out."], ["Egg whites pre-cooked", "Boil 6 eggs Sunday. AM: 3 whole + carton whites scrambled 3 min, or eat boiled cold."], ["Quark bowl", "250g quark + frozen berries + honey + handful oats. No cooking, ~30g protein."]],
   notes: ["BLOCK 2: calories tightened ~150 because Block 1 lost 1kg vs 2+ target. Carbs stay ≥150g around training.", "Weigh DAILY on the cut, same morning conditions — but judge only the 7-day average.", "Target loss: 0.5–0.7kg/week. Faster = you are losing muscle and water, slow down.", "8–10k steps/day outside the gym. This is the silent fat-loss lever — non-negotiable on the cut.", "The missing kg last month = weekends. 1 planned free MEAL (not day). Track Sat/Sun like weekdays.", "Feel flat 2+ days in a row: add 30–40g carbs around training for 2 days. Do NOT quit.", "Vacuum holds 3×20s daily. Water ≥3L. Sleep 7h+ — under-sleeping raises hunger hormones."],
@@ -382,7 +389,7 @@ const DIET = {
 };
 const SHOPPING = [{
   cat: "Protein",
-  items: ["Pechuga de pollo (chicken breast) 1.5kg", "Pavo / turkey fillets ×1", "Huevos ×30", "Claras de huevo (egg white carton) ×1", "Merluza/panga congelada (frozen fish) ×1 bag", "Atún en lata al natural ×6", "Yogur griego / Quark Hacendado ×4-6", "YoPRO 25g protein drink ×5-6", "Leche 2L", "Whey protein (Hacendado or bulk online)", "Lentejas / garbanzos"]
+  items: ["Pechuga de pollo (chicken breast) 1.5kg", "Pavo / turkey fillets ×1", "Huevos ×30", "Claras de huevo (egg white carton) ×1", "Merluza/panga congelada (frozen fish) ×1 bag", "Atún en lata al natural ×6", "Queso batido / yogur griego 0% ×4-6", "YoPRO 25g protein drink ×5-6", "Leche 2L", "Whey protein (Hacendado or bulk online)", "Lentejas / garbanzos"]
 }, {
   cat: "Carbs",
   items: ["Avena (oats) 1kg", "Arroz 1kg", "Patatas 2kg", "Pan integral ×1", "Plátanos ×1 bunch", "Tortitas de arroz"]
