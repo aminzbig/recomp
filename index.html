@@ -263,9 +263,49 @@ const PROGRAM = {
       scheme: "3×max",
       t: "dragonflag"
     }]
+  },
+  cond2: {
+    name: "Metcon + Core",
+    sub: "Short session · 35-40 min",
+    accent: "#5E5CE6",
+    core: "Warm-up: 5 min row/bike easy + mobility cycle",
+    cardio: "Built in — keep intensity high, session stays short",
+    wods: ["W1 · AMRAP 12: 10 KB swing / 8 box jump / 6 pull-up", "W2 · EMOM 14: alt ski erg cal 12 / DB snatch 10", "W3 · 4 RFT: 400m run / 15 air squat / 10 push-up", "W4 · 30min Zone2 + core circuit ×3"],
+    exercises: [{
+      id: "c2_wod",
+      name: "Week's Metcon (see above)",
+      scheme: "for time / AMRAP",
+      main: true,
+      t: "burpee"
+    }, {
+      id: "c2_hlr",
+      name: "Hanging Leg Raise",
+      scheme: "4×12",
+      t: "hang"
+    }, {
+      id: "c2_cablecrunch",
+      name: "Cable Crunch (loaded)",
+      scheme: "4×15",
+      t: "kneelcrunch"
+    }, {
+      id: "c2_plank",
+      name: "Weighted Plank",
+      scheme: "3×45-60s",
+      t: "plank"
+    }, {
+      id: "c2_side",
+      name: "Side Plank (each side)",
+      scheme: "3×40s",
+      t: "plank"
+    }, {
+      id: "c2_carry",
+      name: "Farmer Carry",
+      scheme: "3×40m heavy",
+      t: "bodyweight"
+    }]
   }
 };
-const DAY_ORDER = ["push", "pull", "legs", "delts", "cond"];
+const DAY_ORDER = ["push", "pull", "legs", "delts", "cond", "cond2"];
 
 // 4-week block. Each week: progression focus + the Mon–Sun session map.
 // session keys map to PROGRAM; "off" = rest, "pump" = optional weak-point day.
@@ -275,25 +315,29 @@ const MONTH = [{
   wk: 1,
   focus: "New loads at 5×5",
   detail: "Mains move to 5×5 — find the weight (heavier than your 4×6-8). Calories drop to 1,800–2,000. Weekends count.",
-  wod: "WOD 1 — EMOM 16: 12 cal row / 10 DB thruster / 8 burpee / rest · WOD 2 — AMRAP 12: 10 KB swing / 8 box jump / 6 pull-up",
+  wod: "Fri (Conditioning) — EMOM 16: 12 cal row / 10 DB thruster / 8 burpee",
+  wod2: "Sat (Metcon+Core) — AMRAP 12: 10 KB swing / 8 box jump / 6 pull-up",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
 }, {
   wk: 2,
   focus: "Own the 5×5",
   detail: "Same weights, cleaner reps. Every day weighed, every step counted. The missing kg last month was weekends.",
-  wod: "WOD 1 — 5 RFT: 15 wall ball / 12 cal bike / 9 T2B · WOD 2 — EMOM 14: ski erg / DB snatch alt",
+  wod: "Fri (Conditioning) — 5 RFT: 15 wall ball / 12 cal bike / 9 T2B",
+  wod2: "Sat (Metcon+Core) — EMOM 14: alt ski erg cal 12 / DB snatch 10",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
 }, {
   wk: 3,
   focus: "Add 2.5kg where strong",
   detail: "Nudge mains up if bar speed is good. Accessories chase reps. Flat 2 days? Add 30g training carbs, not a cheat day.",
-  wod: "WOD 1 — 21-15-9: cal row / KB swing / burpee over KB · WOD 2 — 4 RFT: 400m run / 15 air squat / 10 push-up",
+  wod: "Fri (Conditioning) — 21-15-9: cal row / KB swing / burpee over KB",
+  wod2: "Sat (Metcon+Core) — 4 RFT: 400m run / 15 air squat / 10 push-up",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
 }, {
   wk: 4,
   focus: "Assess: target 80kg",
   detail: "Photos + waist + weight. At/near 80kg = on track, roll into Block 3. Above 81 = the deficit leaked; we audit the week, not the plan.",
-  wod: "WOD 1 — AMRAP 18: 12 cal bike / 10 DB clean / 8 dip / 20 DU · WOD 2 — 30min Zone2 + dragon flag 3×max",
+  wod: "Fri (Conditioning) — AMRAP 18: 12 cal bike / 10 DB clean / 8 dip / 20 DU",
+  wod2: "Sat (Metcon+Core) — 30min Zone2 + core circuit ×3",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
 }];
 const SESSION_META = {
@@ -323,7 +367,7 @@ const SESSION_META = {
   },
   cond2: {
     label: "Metcon + Core (short)",
-    accent: "#BF5AF2"
+    accent: "#5E5CE6"
   },
   off: {
     label: "Rest",
@@ -2555,7 +2599,7 @@ function PlanTab({
       });
       return /*#__PURE__*/React.createElement("div", {
         key: di,
-        onClick: () => tappable && goToDay && goToDay(sess === "cond2" ? "cond" : sess),
+        onClick: () => tappable && goToDay && goToDay(sess),
         style: {
           display: "flex",
           alignItems: "center",
@@ -2639,12 +2683,21 @@ function PlanTab({
         margin: "8px 4px 0",
         lineHeight: 1.4
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
       style: {
         color: "#BF5AF2",
         fontWeight: 600
       }
-    }, "WOD:"), " ", w.wod));
+    }, "WOD:"), " ", w.wod), w.wod2 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 3
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "#5E5CE6",
+        fontWeight: 600
+      }
+    }, "WOD:"), " ", w.wod2)));
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       background: C.card,
