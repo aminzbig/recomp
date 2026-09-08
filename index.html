@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Recomp — Block 2</title>
+<title>Recomp — Block 3 Lean Gain</title>
 <style>
   html,body{margin:0;padding:0;background:#000;}
   input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
@@ -39,11 +39,11 @@ const PROGRAM = {
     sub: "Upper chest + shoulders",
     accent: "#FF453A",
     core: "Core TABATA 8×30/15 — Hollow → Hollow rock → Arch hollow → Side hollow",
-    cardio: "30–35 min Zone 2 (incline walk/bike) — daily on the cut",
+    cardio: "15-20 min easy only. On a gain, cardio is for health, not burn. Steps 8-10k.",
     exercises: [{
       id: "p_inc_bb",
       name: "Incline Barbell Bench",
-      scheme: "5×5 — heavier",
+      scheme: "5×5 heavy (+2.5kg/wk)",
       main: true,
       t: "press"
     }, {
@@ -64,13 +64,18 @@ const PROGRAM = {
     }, {
       id: "p_dips",
       name: "Weighted Dips",
-      scheme: "4×8",
+      scheme: "4×8-10",
       t: "dip"
     }, {
       id: "p_tri",
       name: "OH Cable Triceps Ext",
-      scheme: "3×12",
+      scheme: "4×12",
       t: "pushdown"
+    }, {
+      id: "p_flye",
+      name: "Cable Fly (low-to-high)",
+      scheme: "3×15",
+      t: "press"
     }, {
       id: "p_cablecrunch",
       name: "Cable Crunch (loaded)",
@@ -88,11 +93,11 @@ const PROGRAM = {
     sub: "Back + biceps + abs",
     accent: "#0A84FF",
     core: "Core TABATA 8×30/15 — Hi plank → Shoulder tap → Reverse → Spider",
-    cardio: "30–35 min Zone 2 (incline walk/bike) — daily on the cut",
+    cardio: "15-20 min easy only. On a gain, cardio is for health, not burn. Steps 8-10k.",
     exercises: [{
       id: "pl_pullup",
       name: "Weighted Pull-up",
-      scheme: "5×5 — heavier",
+      scheme: "5×5 heavy (+2.5kg/wk)",
       main: true,
       t: "pullup"
     }, {
@@ -103,7 +108,7 @@ const PROGRAM = {
     }, {
       id: "pl_csrow",
       name: "Chest-supported DB Row",
-      scheme: "4×10",
+      scheme: "4×10-12",
       t: "row"
     }, {
       id: "pl_cablerow",
@@ -118,13 +123,18 @@ const PROGRAM = {
     }, {
       id: "pl_ezcurl",
       name: "EZ-bar Curl",
-      scheme: "3×8-10",
+      scheme: "4×8-10",
       t: "curl"
     }, {
       id: "pl_hammer",
       name: "DB Hammer Curl",
-      scheme: "3×12",
+      scheme: "4×12",
       t: "curl"
+    }, {
+      id: "pl_shrug",
+      name: "Barbell Shrug",
+      scheme: "4×12",
+      t: "shrug"
     }, {
       id: "pl_declinesit",
       name: "Weighted Decline Sit-up",
@@ -146,13 +156,13 @@ const PROGRAM = {
     exercises: [{
       id: "lg_squat",
       name: "Back Squat",
-      scheme: "5×5 — add 2.5-5kg vs Block 1",
+      scheme: "5×5 heavy (+2.5-5kg/wk)",
       main: true,
       t: "squat"
     }, {
       id: "lg_rdl",
       name: "Romanian Deadlift",
-      scheme: "4×8",
+      scheme: "4×8-10",
       t: "hinge"
     }, {
       id: "lg_legpress",
@@ -175,6 +185,11 @@ const PROGRAM = {
       scheme: "4×15",
       t: "calf"
     }, {
+      id: "lg_press2",
+      name: "Leg Press (high volume)",
+      scheme: "3×15",
+      t: "legpress"
+    }, {
       id: "lg_ktc",
       name: "Hanging Knee-to-Chest",
       scheme: "3×15",
@@ -191,17 +206,17 @@ const PROGRAM = {
     sub: "The lines day",
     accent: "#FF9F0A",
     core: "Core TABATA 8×30/15 — Elbow plank → Side L → Side R → Reverse",
-    cardio: "30–35 min Zone 2 (incline walk/bike) — daily on the cut",
+    cardio: "15-20 min easy only. On a gain, cardio is for health, not burn. Steps 8-10k.",
     exercises: [{
       id: "d_ohp",
       name: "Standing Overhead Press",
-      scheme: "5×5 — heavier",
+      scheme: "5×5 heavy (+2.5kg/wk)",
       main: true,
       t: "ohp"
     }, {
       id: "d_lat",
       name: "DB Lateral Raise",
-      scheme: "4×12-15 + drop set on last",
+      scheme: "5×12-15 + drop set",
       t: "lateral"
     }, {
       id: "d_inc",
@@ -211,7 +226,7 @@ const PROGRAM = {
     }, {
       id: "d_rear",
       name: "Rear Delt Fly",
-      scheme: "4×15",
+      scheme: "4×15-20",
       t: "facepull"
     }, {
       id: "d_front",
@@ -309,33 +324,33 @@ const DAY_ORDER = ["push", "pull", "legs", "delts", "cond", "cond2"];
 
 // 4-week block. Each week: progression focus + the Mon–Sun session map.
 // session keys map to PROGRAM; "off" = rest, "pump" = optional weak-point day.
-const BLOCK_START = "2026-08-08"; // BLOCK 2 - Day 1 = Sat Aug 8
+const BLOCK_START = "2026-09-08"; // BLOCK 3 (LEAN GAIN) - Day 1 = Tue Sep 8
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTH = [{
   wk: 1,
-  focus: "New loads at 5×5",
-  detail: "Mains move to 5×5 — find the weight (heavier than your 4×6-8). Calories drop to 1,800–2,000. Weekends count.",
+  focus: "Surplus starts + volume up",
+  detail: "Eat 2,600-2,800 kcal. Mains 5×5 heavy, accessories get an extra set. 5 sessions THIS WEEK — that is the whole job.",
   wod: "Fri (Conditioning) — EMOM 16: 12 cal row / 10 DB thruster / 8 burpee",
   wod2: "Sat (Metcon+Core) — AMRAP 12: 10 KB swing / 8 box jump / 6 pull-up",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
 }, {
   wk: 2,
-  focus: "Own the 5×5",
-  detail: "Same weights, cleaner reps. Every day weighed, every step counted. The missing kg last month was weekends.",
+  focus: "Add load",
+  detail: "+2.5kg on every main you completed all 5×5 on. Scale should read ~82.5. Weekends tracked like weekdays.",
   wod: "Fri (Conditioning) — 5 RFT: 15 wall ball / 12 cal bike / 9 T2B",
   wod2: "Sat (Metcon+Core) — EMOM 14: alt ski erg cal 12 / DB snatch 10",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
 }, {
   wk: 3,
-  focus: "Add 2.5kg where strong",
-  detail: "Nudge mains up if bar speed is good. Accessories chase reps. Flat 2 days? Add 30g training carbs, not a cheat day.",
+  focus: "Push volume",
+  detail: "Add a set to the main lift (6×5). Eat at the top of the range on training days. ~83kg expected.",
   wod: "Fri (Conditioning) — 21-15-9: cal row / KB swing / burpee over KB",
   wod2: "Sat (Metcon+Core) — 4 RFT: 400m run / 15 air squat / 10 push-up",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
 }, {
   wk: 4,
-  focus: "Assess: target 80kg",
-  detail: "Photos + waist + weight. At/near 80kg = on track, roll into Block 3. Above 81 = the deficit leaked; we audit the week, not the plan.",
+  focus: "Assess: 83.5-84kg + waist",
+  detail: "Weight up 1.5-2kg AND waist same = perfect lean gain. Waist up more than 2cm = surplus too big, trim 200 kcal.",
   wod: "Fri (Conditioning) — AMRAP 18: 12 cal bike / 10 DB clean / 8 dip / 20 DU",
   wod2: "Sat (Metcon+Core) — 30min Zone2 + core circuit ×3",
   days: ["push", "pull", "legs", "delts", "cond", "cond2", "off"]
@@ -383,28 +398,28 @@ const PELVIC = {
   note: "1 round morning + 1 evening. The full relax half matters as much as the squeeze — don't skip it. Results in 4–6 weeks."
 };
 const DIET = {
-  targets: [["Calories", "1,800–2,000 kcal", "Block 2 — at 82kg, tightened"], ["Protein", "175–185 g", "higher on a cut — locked"], ["Fat", "50–60 g", "cut comes from here"], ["Carbs", "150–180 g", "around AM training — keeps you strong"]],
+  targets: [["Calories", "2,600–2,800 kcal", "LEAN GAIN surplus — at 82kg"], ["Protein", "175–185 g", "unchanged — still the priority"], ["Fat", "75–85 g", "more room now"], ["Carbs", "300–350 g", "the growth driver — eat them"]],
   meals: [{
     name: "Pre-workout",
     time: "30s · grab",
     protein: "",
     icon: "banana",
-    items: [["banana", 1, "banana"], ["rice cakes", 2, "or 2 rice cakes"]],
-    text: "Coffee + 1 banana (or 2 rice cakes). Keep this — training fasted on a cut costs muscle."
+    items: [["banana", 1, "banana"], ["rice cakes", 2, "+ 2 rice cakes"]],
+    text: "Banana + rice cakes both now. On a gain you want fuel before heavy 5×5 work."
   }, {
     name: "Post-workout",
-    time: "2 min",
-    protein: "≈37g P",
+    time: "4 min",
+    protein: "≈50g P",
     icon: "eggs",
-    items: [["eggs", 2, "eggs (boil night before)"], ["whey", 1, "shake or YoPRO"]],
-    text: "Eggs + shake right after training: whey hits fast, eggs carry you to lunch. On legs/conditioning days add 40g oats — that is your anti-flat insurance."
+    items: [["eggs", 3, "eggs"], ["whey", 1, "shake or YoPRO"], ["oats", 1, "60g oats + milk"]],
+    text: "Oats added — post-workout carbs are non-negotiable on a gain. This is now a real meal, not a snack."
   }, {
     name: "Lunch",
     time: "prepped",
     protein: "≈58g P",
     icon: "chicken",
-    items: [["chicken", 1, "230g chicken / turkey"], ["rice", 1, "80g rice or 250g potato"], ["veg", 1, "big plate veg, 1 tsp oil"]],
-    text: "Your ONLY carb meal — full portion stays, never trim it. 230g chicken (or turkey/lean meat). Carbs here fuel tomorrow morning since dinner is carb-free."
+    items: [["chicken", 1, "230g chicken / turkey"], ["rice", 1, "120g rice (3 fists cooked)"], ["veg", 1, "veg + olive oil"]],
+    text: "Carbs UP to 3 fists. This is a building meal now, not a controlled one."
   }, {
     name: "Afternoon (~5pm)",
     time: "30s",
@@ -414,11 +429,11 @@ const DIET = {
     text: "One shake or YoPRO, nothing else needed. Bridges lunch to dinner so you do not arrive starving."
   }, {
     name: "Dinner",
-    time: "8 min",
-    protein: "≈38g P",
+    time: "10 min",
+    protein: "≈42g P",
     icon: "fish",
-    items: [["fish", 1, "180-200g chicken / fish / lean meat"], ["salad", 1, "veg or salad, 1 tsp oil"]],
-    text: "Protein + veg, no carbs at night — fine ONLY because lunch keeps its full rice/potato. Do not trim lunch carbs too."
+    items: [["fish", 1, "200g chicken / fish / meat"], ["rice", 1, "2 fists rice or potato"], ["salad", 1, "veg + oil"]],
+    text: "Carbs are BACK at dinner on this block. You are building — fuel the recovery overnight."
   }, {
     name: "Dessert (after dinner)",
     time: "1 min",
@@ -428,8 +443,8 @@ const DIET = {
     text: "Slow casein protein before bed feeds muscle overnight. Queso batido is smooth (no lumps) and cheap at Mercadona. Dessert with a job."
   }],
   fast: [["Pre-made overnight oats", "Night before: 80g oats + milk + 1 scoop whey in a jar. Grab & eat cold. 0 min AM."], ["Whey + banana shake", "1.5 scoops whey + banana + milk, blend 30s. ~45g protein, drink it walking out."], ["Egg whites pre-cooked", "Boil 6 eggs Sunday. AM: 3 whole + carton whites scrambled 3 min, or eat boiled cold."], ["Quark bowl", "250g quark + frozen berries + honey + handful oats. No cooking, ~30g protein."]],
-  notes: ["BLOCK 2: calories tightened ~150 because Block 1 lost 1kg vs 2+ target. Carbs stay ≥150g around training.", "Weigh DAILY on the cut, same morning conditions — but judge only the 7-day average.", "Target loss: 0.5–0.7kg/week. Faster = you are losing muscle and water, slow down.", "8–10k steps/day outside the gym. This is the silent fat-loss lever — non-negotiable on the cut.", "The missing kg last month = weekends. 1 planned free MEAL (not day). Track Sat/Sun like weekdays.", "Feel flat 2+ days in a row: add 30–40g carbs around training for 2 days. Do NOT quit.", "Vacuum holds 3×20s daily. Water ≥3L. Sleep 7h+ — under-sleeping raises hunger hormones."],
-  cutOrder: [["1. Protein", "Never cut — 160–175g locked", "#30D158"], ["2. Training carbs", "Keep ≥150–180g, around AM workout", "#30D158"], ["3. Fat", "Cut here first — smaller oil/nuts/cheese", "#FF9F0A"], ["4. Portions", "Trim overall size last", "#FF9F0A"]]
+  notes: ["BLOCK 3 = LEAN GAIN. Eating ABOVE maintenance to build. Scale going UP is the goal now.", "THE REAL TARGET: 5 sessions/week. Last block ran at ~4 days and 1 week had one session. That is what stalled it.", "Track food 14 days straight, weekends included. Not forever — just to learn your real numbers.", "Gain 0.3-0.5kg/week MAX. Faster than that is fat, not muscle. Slower = eat more.", "One planned drink night. Two or three erases the week — same rule as the cut, different direction.", "Weigh daily, judge the 7-day average. Waist measured weekly — if it climbs fast, trim 200 kcal.", "8–10k steps/day outside the gym. This is the silent fat-loss lever — non-negotiable on the cut.", "Feel flat 2+ days in a row: add 30–40g carbs around training for 2 days. Do NOT quit.", "Vacuum holds 3×20s daily. Water ≥3L. Sleep 7h+ — under-sleeping raises hunger hormones."],
+  cutOrder: [["1. Protein", "175-185g locked, every day", "#30D158"], ["2. Carbs", "300-350g — this is what builds", "#30D158"], ["3. Around training", "Biggest carbs pre/post workout", "#0A84FF"], ["4. If waist grows", "Trim 200 kcal from fat first", "#FF9F0A"]]
 };
 const SHOPPING = [{
   cat: "Protein",
@@ -2432,15 +2447,15 @@ function ProgressTab() {
       color: C.label,
       fontWeight: 600
     }
-  }, "Block 2 (from 82kg):"), " Block 1 = -1kg, muscle held ✓ but half the target pace. Block 2 target: ", /*#__PURE__*/React.createElement("span", {
+  }, "Block 3 = LEAN GAIN (from 82kg):"), " Target ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: "#FF9F0A"
     }
-  }, "80kg by Day 28"), ". Remaining to abs: ~5-7kg, realistic at tightened pace: ", /*#__PURE__*/React.createElement("span", {
+  }, "83.5-84kg by Oct 5"), ", waist unchanged. Two cut blocks ran at ~50% adherence — that is why they stalled, not the plan. This block the only metric that matters: ", /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "#FF9F0A"
+      color: "#30D158"
     }
-  }, "2.5-3.5 months"), ". The plan works when the weekend works."));
+  }, "5 sessions/week, 7 days tracked"), ". Abs come later, from a proper cut after you have built more to reveal."));
 }
 
 // ============================ PLAN (4-WEEK MONTH) ============================
@@ -2467,7 +2482,7 @@ function PlanTab({
   useEffect(() => {
     (async () => {
       try {
-        const r = await window.storage.get("plan:done:b2");
+        const r = await window.storage.get("plan:done:b3");
         setDone(r ? JSON.parse(r.value) : {});
       } catch {
         setDone({});
@@ -2483,7 +2498,7 @@ function PlanTab({
     if (!next[key]) delete next[key];
     setDone(next);
     try {
-      await window.storage.set("plan:done:b2", JSON.stringify(next));
+      await window.storage.set("plan:done:b3", JSON.stringify(next));
     } catch (x) {
       console.error(x);
     }
@@ -2536,11 +2551,11 @@ function PlanTab({
       color: C.label2,
       lineHeight: 1.5
     }
-  }, "BLOCK 2 · Day 1 = ", /*#__PURE__*/React.createElement("span", {
+  }, "BLOCK 3 · LEAN GAIN · Day 1 = ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: C.label
     }
-  }, "Sat Aug 8 (today)"), " · 82kg start. Tighter deficit, heavier mains. Tap the circle when you finish a day", curWeek >= 0 && /*#__PURE__*/React.createElement("span", {
+  }, "Tue Sep 8"), " · 82kg → target 83.5-84kg. Build size. Tap the circle when you finish a day", curWeek >= 0 && /*#__PURE__*/React.createElement("span", {
     style: {
       color: "#0A84FF"
     }
