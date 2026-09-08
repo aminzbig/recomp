@@ -36,232 +36,317 @@ const {
 const PROGRAM = {
   push: {
     name: "Push",
-    sub: "Upper chest + shoulders",
+    sub: "Chest + shoulders + triceps",
     accent: "#FF453A",
-    core: "Core TABATA 8×30/15 — Hollow → Hollow rock → Arch hollow → Side hollow",
-    cardio: "15-20 min easy only. On a gain, cardio is for health, not burn. Steps 8-10k.",
-    exercises: [{
-      id: "p_inc_bb",
-      name: "Incline Barbell Bench",
-      scheme: "5×5 heavy (+2.5kg/wk)",
-      main: true,
-      t: "press"
-    }, {
-      id: "p_db_press",
-      name: "Seated DB Shoulder Press",
-      scheme: "4×8-10",
-      t: "ohp"
-    }, {
-      id: "p_inc_db",
-      name: "Incline DB Press 30°",
-      scheme: "3×10-12",
-      t: "press"
-    }, {
-      id: "p_cable_lat",
-      name: "Cable Lateral Raise",
-      scheme: "4×12-15",
-      t: "lateral"
-    }, {
-      id: "p_dips",
-      name: "Weighted Dips",
-      scheme: "4×8-10",
-      t: "dip"
-    }, {
-      id: "p_tri",
-      name: "OH Cable Triceps Ext",
-      scheme: "4×12",
-      t: "pushdown"
-    }, {
-      id: "p_flye",
-      name: "Cable Fly (low-to-high)",
-      scheme: "3×15",
-      t: "press"
-    }, {
-      id: "p_cablecrunch",
-      name: "Cable Crunch (loaded)",
-      scheme: "4×15",
-      t: "kneelcrunch"
-    }, {
-      id: "p_hlr",
-      name: "Hanging Leg Raise",
-      scheme: "3×12",
-      t: "hang"
-    }]
+    core: "Warm-up: shoulder rehab band work, scapular push-ups 2×12",
+    cardio: "15-20 min easy · steps 8-10k",
+    variants: {
+      A: {
+        label: "Push A — Barbell focus",
+        exercises: [{
+          id: "pA_incbb",
+          name: "Incline Barbell Bench",
+          scheme: "5×5 heavy (+2.5kg/wk)",
+          main: true,
+          t: "press"
+        }, {
+          id: "pA_ohpdb",
+          name: "Seated DB Shoulder Press",
+          scheme: "4×8-10",
+          t: "ohp"
+        }, {
+          id: "pA_flatdb",
+          name: "Flat DB Press",
+          scheme: "4×10",
+          t: "press"
+        }, {
+          id: "pA_latcable",
+          name: "Cable Lateral Raise",
+          scheme: "4×15",
+          t: "lateral"
+        }, {
+          id: "pA_dips",
+          name: "Weighted Dips",
+          scheme: "4×8-10",
+          t: "dip"
+        }, {
+          id: "pA_skull",
+          name: "EZ-bar Skull Crusher",
+          scheme: "4×10",
+          t: "pushdown"
+        }]
+      },
+      B: {
+        label: "Push B — Machine/cable focus",
+        exercises: [{
+          id: "pB_incbb",
+          name: "Incline Barbell Bench",
+          scheme: "5×5 heavy (+2.5kg/wk)",
+          main: true,
+          t: "press"
+        }, {
+          id: "pB_machpress",
+          name: "Chest Press Machine",
+          scheme: "4×10-12",
+          t: "press"
+        }, {
+          id: "pB_flylow",
+          name: "Cable Fly (low-to-high)",
+          scheme: "4×15",
+          t: "press"
+        }, {
+          id: "pB_arnold",
+          name: "Arnold Press",
+          scheme: "4×10",
+          t: "ohp"
+        }, {
+          id: "pB_latdb",
+          name: "DB Lateral Raise + drop set",
+          scheme: "4×12-15",
+          t: "lateral"
+        }, {
+          id: "pB_rope",
+          name: "Rope Pushdown + Overhead Ext",
+          scheme: "3×15 superset",
+          t: "pushdown"
+        }]
+      }
+    }
   },
   pull: {
     name: "Pull",
-    sub: "Back + biceps + abs",
+    sub: "Back + rear delts + biceps",
     accent: "#0A84FF",
-    core: "Core TABATA 8×30/15 — Hi plank → Shoulder tap → Reverse → Spider",
-    cardio: "15-20 min easy only. On a gain, cardio is for health, not burn. Steps 8-10k.",
-    exercises: [{
-      id: "pl_pullup",
-      name: "Weighted Pull-up",
-      scheme: "5×5 heavy (+2.5kg/wk)",
-      main: true,
-      t: "pullup"
-    }, {
-      id: "pl_latpull",
-      name: "Neutral-Grip Pulldown",
-      scheme: "4×10",
-      t: "pulldown"
-    }, {
-      id: "pl_csrow",
-      name: "Chest-supported DB Row",
-      scheme: "4×10-12",
-      t: "row"
-    }, {
-      id: "pl_cablerow",
-      name: "Cable Row (close)",
-      scheme: "3×12",
-      t: "row"
-    }, {
-      id: "pl_facepull",
-      name: "Face Pull",
-      scheme: "4×15-20",
-      t: "facepull"
-    }, {
-      id: "pl_ezcurl",
-      name: "EZ-bar Curl",
-      scheme: "4×8-10",
-      t: "curl"
-    }, {
-      id: "pl_hammer",
-      name: "DB Hammer Curl",
-      scheme: "4×12",
-      t: "curl"
-    }, {
-      id: "pl_shrug",
-      name: "Barbell Shrug",
-      scheme: "4×12",
-      t: "shrug"
-    }, {
-      id: "pl_declinesit",
-      name: "Weighted Decline Sit-up",
-      scheme: "4×12",
-      t: "situp"
-    }, {
-      id: "pl_twist",
-      name: "Russian Twist (plate)",
-      scheme: "3×20",
-      t: "twist"
-    }]
+    core: "Warm-up: band pull-aparts 2×20, scapular pull-ups 2×10",
+    cardio: "15-20 min easy · steps 8-10k",
+    variants: {
+      A: {
+        label: "Pull A — Vertical focus",
+        exercises: [{
+          id: "lA_pullup",
+          name: "Weighted Pull-up",
+          scheme: "5×5 heavy (+2.5kg/wk)",
+          main: true,
+          t: "pullup"
+        }, {
+          id: "lA_pulldown",
+          name: "Neutral-Grip Pulldown",
+          scheme: "4×10-12",
+          t: "pulldown"
+        }, {
+          id: "lA_csrow",
+          name: "Chest-supported DB Row",
+          scheme: "4×10-12",
+          t: "row"
+        }, {
+          id: "lA_face",
+          name: "Face Pull",
+          scheme: "4×20",
+          t: "facepull"
+        }, {
+          id: "lA_ez",
+          name: "EZ-bar Curl",
+          scheme: "4×8-10",
+          t: "curl"
+        }, {
+          id: "lA_hammer",
+          name: "DB Hammer Curl",
+          scheme: "4×12",
+          t: "curl"
+        }]
+      },
+      B: {
+        label: "Pull B — Horizontal focus",
+        exercises: [{
+          id: "lB_row",
+          name: "Barbell Bent-Over Row",
+          scheme: "5×5 heavy (+2.5kg/wk)",
+          main: true,
+          t: "row"
+        }, {
+          id: "lB_tbar",
+          name: "T-Bar Row",
+          scheme: "4×10",
+          t: "row"
+        }, {
+          id: "lB_latwide",
+          name: "Wide-Grip Lat Pulldown",
+          scheme: "4×12",
+          t: "pulldown"
+        }, {
+          id: "lB_pullover",
+          name: "Cable Pullover",
+          scheme: "3×15",
+          t: "pulldown"
+        }, {
+          id: "lB_reardelt",
+          name: "Rear Delt Fly Machine",
+          scheme: "4×20",
+          t: "facepull"
+        }, {
+          id: "lB_inccurl",
+          name: "Incline DB Curl",
+          scheme: "4×10",
+          t: "curl"
+        }]
+      }
+    }
   },
   legs: {
     name: "Legs",
-    sub: "Squat focus",
+    sub: "Quads + hams + glutes",
     accent: "#30D158",
-    core: "Core TABATA 8×40/20 — Beast hold → Crab hold → Beast walk → Crab walk",
-    cardio: "30 min Zone 2 or 20 min walk",
-    exercises: [{
-      id: "lg_squat",
-      name: "Back Squat",
-      scheme: "5×5 heavy (+2.5-5kg/wk)",
-      main: true,
-      t: "squat"
-    }, {
-      id: "lg_rdl",
-      name: "Romanian Deadlift",
-      scheme: "4×8-10",
-      t: "hinge"
-    }, {
-      id: "lg_legpress",
-      name: "Bulgarian Split Squat",
-      scheme: "3×10/leg",
-      t: "lunge"
-    }, {
-      id: "lg_lunge",
-      name: "Walking Lunge (DB)",
-      scheme: "3×12/leg",
-      t: "lunge"
-    }, {
-      id: "lg_curl",
-      name: "Leg Curl",
-      scheme: "3×12",
-      t: "legcurl"
-    }, {
-      id: "lg_calf",
-      name: "Standing Calf Raise",
-      scheme: "4×15",
-      t: "calf"
-    }, {
-      id: "lg_press2",
-      name: "Leg Press (high volume)",
-      scheme: "3×15",
-      t: "legpress"
-    }, {
-      id: "lg_ktc",
-      name: "Hanging Knee-to-Chest",
-      scheme: "3×15",
-      t: "hang"
-    }, {
-      id: "lg_back",
-      name: "Back Extension",
-      scheme: "3×15",
-      t: "backext"
-    }]
+    core: "Warm-up: hip + ankle mobility, bodyweight squats 2×15",
+    cardio: "Skip or 15 min walk · steps 8-10k",
+    variants: {
+      A: {
+        label: "Legs A — Squat focus",
+        exercises: [{
+          id: "gA_squat",
+          name: "Back Squat",
+          scheme: "5×5 heavy (+2.5-5kg/wk)",
+          main: true,
+          t: "squat"
+        }, {
+          id: "gA_rdl",
+          name: "Romanian Deadlift",
+          scheme: "4×8-10",
+          t: "hinge"
+        }, {
+          id: "gA_legpress",
+          name: "Leg Press (high volume)",
+          scheme: "4×15",
+          t: "legpress"
+        }, {
+          id: "gA_curl",
+          name: "Lying Leg Curl",
+          scheme: "4×12",
+          t: "legcurl"
+        }, {
+          id: "gA_calf",
+          name: "Standing Calf Raise",
+          scheme: "5×15",
+          t: "calf"
+        }]
+      },
+      B: {
+        label: "Legs B — Deadlift/unilateral",
+        exercises: [{
+          id: "gB_dl",
+          name: "Deadlift",
+          scheme: "5×5 heavy (+5kg/wk)",
+          main: true,
+          t: "hinge"
+        }, {
+          id: "gB_front",
+          name: "Front Squat",
+          scheme: "4×8",
+          t: "squat"
+        }, {
+          id: "gB_bulg",
+          name: "Bulgarian Split Squat",
+          scheme: "3×10/leg",
+          t: "lunge"
+        }, {
+          id: "gB_ext",
+          name: "Leg Extension",
+          scheme: "4×15",
+          t: "legcurl"
+        }, {
+          id: "gB_seatedcalf",
+          name: "Seated Calf Raise",
+          scheme: "5×15",
+          t: "calf"
+        }]
+      }
+    }
   },
   delts: {
-    name: "Delts+Chest",
+    name: "Delts + Arms",
     sub: "The lines day",
     accent: "#FF9F0A",
-    core: "Core TABATA 8×30/15 — Elbow plank → Side L → Side R → Reverse",
-    cardio: "15-20 min easy only. On a gain, cardio is for health, not burn. Steps 8-10k.",
-    exercises: [{
-      id: "d_ohp",
-      name: "Standing Overhead Press",
-      scheme: "5×5 heavy (+2.5kg/wk)",
-      main: true,
-      t: "ohp"
-    }, {
-      id: "d_lat",
-      name: "DB Lateral Raise",
-      scheme: "5×12-15 + drop set",
-      t: "lateral"
-    }, {
-      id: "d_inc",
-      name: "Incline Cable/Machine Press",
-      scheme: "4×10",
-      t: "press"
-    }, {
-      id: "d_rear",
-      name: "Rear Delt Fly",
-      scheme: "4×15-20",
-      t: "facepull"
-    }, {
-      id: "d_front",
-      name: "DB Front Raise",
-      scheme: "3×12",
-      t: "frontraise"
-    }, {
-      id: "d_shrug",
-      name: "DB/BB Shrug",
-      scheme: "3×15",
-      t: "shrug"
-    }, {
-      id: "d_latburn",
-      name: "Cable Lat Raise burnout",
-      scheme: "2×max",
-      t: "lateral"
-    }, {
-      id: "d_crunch",
-      name: "Cable Crunch",
-      scheme: "3×20",
-      t: "kneelcrunch"
-    }, {
-      id: "d_flutter",
-      name: "Flutter Kicks",
-      scheme: "3×40",
-      t: "situp"
-    }]
+    core: "Warm-up: shoulder mobility + band work",
+    cardio: "15-20 min easy · steps 8-10k",
+    variants: {
+      A: {
+        label: "Delts A — Press focus",
+        exercises: [{
+          id: "dA_ohp",
+          name: "Standing Overhead Press",
+          scheme: "5×5 heavy (+2.5kg/wk)",
+          main: true,
+          t: "ohp"
+        }, {
+          id: "dA_lat",
+          name: "DB Lateral Raise",
+          scheme: "5×12-15 + drop set",
+          t: "lateral"
+        }, {
+          id: "dA_rear",
+          name: "Rear Delt Fly",
+          scheme: "4×15-20",
+          t: "facepull"
+        }, {
+          id: "dA_shrug",
+          name: "Barbell Shrug",
+          scheme: "4×12",
+          t: "shrug"
+        }, {
+          id: "dA_curl",
+          name: "Barbell Curl",
+          scheme: "4×10",
+          t: "curl"
+        }, {
+          id: "dA_close",
+          name: "Close-Grip Bench Press",
+          scheme: "4×10",
+          t: "pushdown"
+        }]
+      },
+      B: {
+        label: "Delts B — Volume focus",
+        exercises: [{
+          id: "dB_machpress",
+          name: "Shoulder Press Machine",
+          scheme: "4×10-12",
+          main: true,
+          t: "ohp"
+        }, {
+          id: "dB_latcable",
+          name: "Single-Arm Cable Lateral",
+          scheme: "4×15/side",
+          t: "lateral"
+        }, {
+          id: "dB_upright",
+          name: "Cable Upright Row",
+          scheme: "4×12",
+          t: "shrug"
+        }, {
+          id: "dB_facepull",
+          name: "Face Pull (high rep)",
+          scheme: "4×20",
+          t: "facepull"
+        }, {
+          id: "dB_preacher",
+          name: "Preacher Curl",
+          scheme: "4×12",
+          t: "curl"
+        }, {
+          id: "dB_dipmach",
+          name: "Dip Machine / Bench Dips",
+          scheme: "4×15",
+          t: "dip"
+        }]
+      }
+    }
   },
   cond: {
     name: "Conditioning",
-    sub: "CrossFit / full body",
+    sub: "CrossFit metcon",
     accent: "#BF5AF2",
-    core: "Core TABATA 8×40/20 — Walking plank → Mtn climber → Hi plank → Hip thrust",
+    core: "Core TABATA 8×40/20 — hollow, side hollow, arch hollow",
     cardio: "Built into WOD",
-    wods: ["W1 · EMOM 18: Wall ball 14 / KB swing 16 / Burpees 8", "W2 · E3MOM 15: DB thrusters 12 / Pull-ups 8 / Air bike 10cal", "W3 · 21-15-9 for time: DB G2OH / Burpee over DB / Air squat", "W4 · AMRAP 20: 15cal bike / 10 wall ball / 12 step-up-over / 10 HR push-up"],
+    wods: ["W1 · EMOM 16: 12 cal row / 10 DB thruster / 8 burpee", "W2 · 5 RFT: 15 wall ball / 12 cal bike / 9 T2B", "W3 · 21-15-9: cal row / KB swing / burpee over KB", "W4 · AMRAP 18: 12 cal bike / 10 DB clean / 8 dip / 20 DU"],
     exercises: [{
       id: "c_core",
       name: "Core TABATA 8×40/20",
@@ -269,23 +354,24 @@ const PROGRAM = {
       t: "plank"
     }, {
       id: "c_wod",
-      name: "WOD (week's metcon)",
+      name: "Week's WOD (see above)",
       scheme: "for time/AMRAP",
+      main: true,
       t: "burpee"
     }, {
-      id: "c_dragon",
-      name: "Dragon Flag / Hollow Rock",
-      scheme: "3×max",
-      t: "dragonflag"
+      id: "c_farmer",
+      name: "Farmer Carry",
+      scheme: "3×40m heavy",
+      t: "bodyweight"
     }]
   },
   cond2: {
     name: "Metcon + Core",
     sub: "Short session · 35-40 min",
     accent: "#5E5CE6",
-    core: "Warm-up: 5 min row/bike easy + mobility cycle",
-    cardio: "Built in — keep intensity high, session stays short",
-    wods: ["W1 · AMRAP 12: 10 KB swing / 8 box jump / 6 pull-up", "W2 · EMOM 14: alt ski erg cal 12 / DB snatch 10", "W3 · 4 RFT: 400m run / 15 air squat / 10 push-up", "W4 · 30min Zone2 + core circuit ×3"],
+    core: "Warm-up: 5 min row/bike easy + mobility",
+    cardio: "Built in — high intensity, short",
+    wods: ["W1 · AMRAP 12: 10 KB swing / 8 box jump / 6 pull-up", "W2 · EMOM 14: alt ski erg cal 12 / DB snatch 10", "W3 · 4 RFT: 400m run / 15 air squat / 10 push-up", "W4 · EMOM 16: wall ball / row / burpee / rest"],
     exercises: [{
       id: "c2_wod",
       name: "Week's Metcon (see above)",
@@ -306,11 +392,6 @@ const PROGRAM = {
       id: "c2_plank",
       name: "Weighted Plank",
       scheme: "3×45-60s",
-      t: "plank"
-    }, {
-      id: "c2_side",
-      name: "Side Plank (each side)",
-      scheme: "3×40s",
       t: "plank"
     }, {
       id: "c2_carry",
@@ -1725,6 +1806,12 @@ function TrainTab({
   day,
   setDay
 }) {
+  // auto A/B by week of block, with manual override
+  const _start = new Date(BLOCK_START + "T00:00:00");
+  const _diff = Math.floor((new Date() - _start) / (1000 * 60 * 60 * 24));
+  const _wk = _diff >= 0 ? Math.floor(_diff / 7) : 0;
+  const autoVar = _wk % 2 === 0 ? "A" : "B";
+  const [variant, setVariant] = useState(autoVar);
   const cur = PROGRAM[day];
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1801,7 +1888,48 @@ function TrainTab({
     style: {
       marginBottom: 4
     }
-  }, w)))), cur.exercises.map(ex => /*#__PURE__*/React.createElement(ExerciseCard, {
+  }, w)))), cur.variants && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      marginBottom: 14
+    }
+  }, ["A", "B"].map(v => {
+    const active = v === variant;
+    return /*#__PURE__*/React.createElement("button", {
+      key: v,
+      onClick: () => setVariant(v),
+      style: {
+        flex: 1,
+        padding: "10px",
+        borderRadius: 10,
+        border: "none",
+        cursor: "pointer",
+        fontFamily: FONT,
+        background: active ? cur.accent : C.card,
+        color: active ? "#fff" : C.label2,
+        fontSize: 14,
+        fontWeight: 600
+      }
+    }, cur.variants[v].label.split("—")[0].trim(), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "block",
+        fontSize: 11,
+        fontWeight: 400,
+        opacity: 0.85
+      }
+    }, cur.variants[v].label.split("—")[1]?.trim()));
+  })), cur.variants && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: C.label3,
+      marginBottom: 12
+    }
+  }, "Week ", _wk + 1, " default: ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: cur.accent
+    }
+  }, autoVar), " · alternates weekly so it never repeats"), (cur.variants ? cur.variants[variant].exercises : cur.exercises).map(ex => /*#__PURE__*/React.createElement(ExerciseCard, {
     key: ex.id,
     ex: ex,
     accent: cur.accent
